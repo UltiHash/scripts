@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
-import concurrent
+import concurrent.futures
 import boto3
 import os
 import pathlib
@@ -32,7 +32,7 @@ def parse_args():
 class uploader:
     def __init__(self, config):
         self.threads = concurrent.futures.ThreadPoolExecutor(max_workers=config.jobs)
-        self.s3 = boto3.client('s3', endpoint_url=config.url,
+        self.s3 = boto3.client('s3', endpoint_url=config.url[0],
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
         self.config = config
 
