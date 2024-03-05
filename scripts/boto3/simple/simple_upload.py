@@ -5,26 +5,26 @@ import sys
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("usage: simple_upload.py <endpoint> [file [file ...]]")
-        print("\nSimple single-threaded script to outline file upload to S3 service")
+        print("usage: simple_upload.py <UltiHash URL> [file [file ...]]")
+        print("\nSimple single-threaded script to outline file upload to UltiHash service")
         print("using boto3 library.")
         sys.exit(1)
 
-    # connection to S3 service
-    url = sys.argv[1]
-    target_s3 = boto3.client('s3', endpoint_url=url,
+    # connection to UltiHash S3 service
+    uh_url = sys.argv[1]
+    uh_service = boto3.client('s3', endpoint_url=uh_url,
         aws_access_key_id='', aws_secret_access_key='')
 
     # all data will be stored under
     target_bucket_name = "bucket"
-    target_s3.create_bucket(Bucket=target_bucket_name)
+    uh_service.create_bucket(Bucket=target_bucket_name)
 
     # upload each file from command line and output real and effective size
     for id in range(2, len(sys.argv)):
         file = sys.argv[id]
 
         with open(file, 'rb') as f:
-            response = target_s3.put_object(Bucket=target_bucket_name, Key=os.path.basename(file), Body=f)
+            response = uh_service.put_object(Bucket=target_bucket_name, Key=os.path.basename(file), Body=f)
 
             headers = response['ResponseMetadata']['HTTPHeaders']
 
