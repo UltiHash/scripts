@@ -1,7 +1,6 @@
 # Overview
 
-UltiHash upload script. Upload data recursively to UltiHash cluster using boto3 to access the S3 API.
-
+Concurrent UltiHash upload script. Upload data recursively to UltiHash cluster using boto3 library to access the S3 API.
 
 # Requirements
 
@@ -9,11 +8,10 @@ UltiHash upload script. Upload data recursively to UltiHash cluster using boto3 
 - boto3 library installed
 
 # Installation
-
 Create a virtual environment to hold the Python libraries:
 
 ```
-$> python -m venv venv
+$> python3 -m venv venv
 $> . venv/bin/activate
 ```
 
@@ -24,8 +22,7 @@ $> pip install --requirement requirements.txt
 ```
 
 # Usage
-
-Upload a folder to a UH cluster running locally:
+To upload a folder to an UH cluster running locally:
 
 ```
 $> ./uh_upload.py $PATH_TO_FOLDER
