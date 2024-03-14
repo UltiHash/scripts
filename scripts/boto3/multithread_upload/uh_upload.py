@@ -30,23 +30,20 @@ def parse_args():
     return parser.parse_args()
 
 class uploader:
-    def __init__(self, config):
+    def __init__(self, config, prg):
         self.threads = concurrent.futures.ThreadPoolExecutor(max_workers=config.jobs)
         self.s3 = boto3.client('s3', endpoint_url=config.url[0],
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
         self.config = config
+        self.prg = prg
 
     def upload(self, bucket, path):
-        stats = dict()
+        def cb(count):
+            self.prg.bytes_uploaded(count)
 
-        with open(path, 'rb') as f:
-            resp = self.s3.put_object(Bucket=bucket, Key=path.name, Body=f)
+        self.s3.upload_file(path, Bucket=bucket, Key=path.name, Callback=cb)
 
-            headers = resp['ResponseMetadata']['HTTPHeaders']
-            stats['uploaded_bytes'] = float(headers['uh-original-size'])
-            stats['stored_bytes'] = float(headers['uh-effective-size'])
-
-        return stats
+        self.prg.file_finished()
 
     def push(self, path):
         results = []
@@ -72,17 +69,18 @@ class uploader:
         return results
 
 class progress_bar(object):
-    def __init__(self, start, files):
-        self.files = files
+    def __init__(self, start):
+        self.files = 0
         self.done = 0
         self.uploaded = 0
         self.stored = 0
         self.start = start
 
-    def update(self, uploaded, stored):
-        self.done += 1
+    def bytes_uploaded(self, uploaded):
         self.uploaded += uploaded
-        self.stored += stored
+
+    def file_finished(self):
+        self.done += 1
 
     def print(self):
         elapsed_s = (time.monotonic_ns() - self.start) / 1000000000
@@ -99,13 +97,14 @@ if __name__ == "__main__":
 
     start_time = time.monotonic_ns()
 
-    up = uploader(config)
+    prg = progress_bar(start_time)
+    up = uploader(config, prg)
     results = []
 
     for path in config.path:
         results += up.push(path)
 
-    prg = progress_bar(start_time, len(results))
+    prg.files = len(results)
 
     while len(results) > 0:
         results_remain = []
