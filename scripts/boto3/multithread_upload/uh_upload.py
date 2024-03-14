@@ -6,7 +6,7 @@ import boto3
 import os
 import pathlib
 import sys
-import time
+import tqdm
 
 AWS_KEY_ID="key-id"
 AWS_KEY_SECRET="secret"
@@ -30,98 +30,65 @@ def parse_args():
     return parser.parse_args()
 
 class uploader:
-    def __init__(self, config, prg):
+    def __init__(self, config):
         self.threads = concurrent.futures.ThreadPoolExecutor(max_workers=config.jobs)
         self.s3 = boto3.client('s3', endpoint_url=config.url[0],
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
-        self.config = config
-        self.prg = prg
+        self.progress = None
+        self.count_buffer = 0
 
-    def upload(self, bucket, path):
+    def upload(self, path, bucket):
         def cb(count):
-            self.prg.bytes_uploaded(count)
+            if self.progress is not None:
+                self.progress.update(count)
+            else:
+                self.count_buffer += count
 
         self.s3.upload_file(path, Bucket=bucket, Key=path.name, Callback=cb)
 
-        self.prg.file_finished()
+    def mk_bucket(self, bucket):
+        self.s3.create_bucket(Bucket=bucket)
 
-    def push(self, path):
-        results = []
-        path = path.resolve()
+    def push(self, bucket, path):
+        return self.threads.submit(self.upload, bucket, path)
 
-        if self.config.bucket is not None:
-            bucket_name = self.config.bucket
-        else:
-            bucket_name = path.name
-
-        print(f"uploading {path} to bucket {bucket_name}")
-
-        self.s3.create_bucket(Bucket=bucket_name)
-        for (root, dirs, files) in os.walk(path):
-            for file in files:
-                fullpath = pathlib.Path(root) / file
-
-                if self.config.verbose:
-                    print(fullpath)
-
-                results += [(fullpath, self.threads.submit(self.upload, bucket_name, fullpath))]
-
-        return results
-
-class progress_bar(object):
-    def __init__(self, start):
-        self.files = 0
-        self.done = 0
-        self.uploaded = 0
-        self.stored = 0
-        self.start = start
-
-    def bytes_uploaded(self, uploaded):
-        self.uploaded += uploaded
-
-    def file_finished(self):
-        self.done += 1
-
-    def print(self):
-        elapsed_s = (time.monotonic_ns() - self.start) / 1000000000
-        uploaded_mb = self.uploaded / (1024 * 1024)
-        reduction = 0 if self.uploaded == 0 else (1 - self.stored / self.uploaded)
-
-        print(f"\rUploaded {uploaded_mb: .02f} MB of data @ {uploaded_mb / elapsed_s: .02f} MB/s, " +
-              f"storage reduction {100 * reduction: .02f} %    { 100 * self.done / self.files: .02f} % ",
-              end='')
+    def set_total(self, total):
+        self.progress = tqdm.tqdm(unit='b', unit_scale=True, total=total)
+        self.progress.update(self.count_buffer)
+        self.count_buffer = 0
 
 
 if __name__ == "__main__":
     config = parse_args()
 
-    start_time = time.monotonic_ns()
-
-    prg = progress_bar(start_time)
-    up = uploader(config, prg)
+    up = uploader(config)
     results = []
+    size_total = 0
 
     for path in config.path:
-        results += up.push(path)
+        path = path.resolve()
 
-    prg.files = len(results)
+        if config.bucket is not None:
+            bucket = config.bucket
+        else:
+            bucket = path.name
 
-    while len(results) > 0:
-        results_remain = []
+        print(f"\ruploading {path} to bucket {bucket}", end="")
 
-        for f in results:
-            if f[1].done():
-                try:
-                    info = f[1].result()
-                    prg.update(info['uploaded_bytes'], info['stored_bytes'])
-                except Exception as e:
-                    print(f"Error uploading {f[0]}: {str(e)}", file=sys.stderr)
-            else:
-                results_remain += [ f ]
+        up.mk_bucket(bucket)
 
-        time.sleep(0.1)
+        for (root, dirs, files) in os.walk(path):
+            for file in files:
+                fullpath = pathlib.Path(root) / file
+                size_total += fullpath.stat().st_size
+                results += [(fullpath, up.push(fullpath, bucket))]
 
-        results = results_remain
-        prg.print()
+    up.set_total(size_total)
+
+    for job in results:
+        try:
+            job[1].result()
+        except Exception as e:
+            print(f"Error uploading {job[0]}: {str(e)}", file=sys.stderr)
 
     print()
