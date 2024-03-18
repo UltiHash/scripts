@@ -4,6 +4,7 @@ import argparse
 import concurrent.futures
 import pprint
 import boto3
+import botocore
 import os
 import pathlib
 import sys
@@ -27,6 +28,10 @@ def parse_args():
         action='store', nargs='+')
     parser.add_argument('-j', '--jobs', help='number of concurrent jobs',
         action='store', default=8, type=int)
+    parser.add_argument('--read-timeout', help='read timeout in seconds',
+        action='store', default=60, type=int)
+    parser.add_argument('--max-attempts', help='maximum number of upload attempts',
+        action='store', default=3, type=int)
 
     return parser.parse_args()
 
@@ -34,7 +39,15 @@ def parse_args():
 class downloader:
     def __init__(self, s3, config):
         self.threads = concurrent.futures.ThreadPoolExecutor(max_workers=config.jobs)
-        self.s3 = boto3.client('s3', endpoint_url=config.url[0],
+
+        s3_cnf = botocore.config.Config(
+            read_timeout=config.read_timeout,
+            retries = {
+                'max_attempts': config.max_attempts,
+                'mode': 'standard'
+            })
+
+        self.s3 = boto3.client('s3', endpoint_url=config.url[0], config=s3_cnf,
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
         self.config = config
         self.progress = None
