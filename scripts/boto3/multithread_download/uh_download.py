@@ -8,6 +8,7 @@ import botocore
 import os
 import pathlib
 import sys
+import time
 import tqdm
 
 AWS_KEY_ID="key-id"
@@ -30,14 +31,14 @@ def parse_args():
         action='store', default=8, type=int)
     parser.add_argument('--read-timeout', help='read timeout in seconds',
         action='store', default=60, type=int)
-    parser.add_argument('--max-attempts', help='maximum number of upload attempts',
+    parser.add_argument('--max-attempts', help='maximum number of download attempts',
         action='store', default=3, type=int)
 
     return parser.parse_args()
 
 
 class downloader:
-    def __init__(self, s3, config):
+    def __init__(self, config):
         self.threads = concurrent.futures.ThreadPoolExecutor(max_workers=config.jobs)
 
         s3_cnf = botocore.config.Config(
@@ -61,14 +62,18 @@ class downloader:
                 self.count_buffer += count
 
         local_path.parent.mkdir(parents=True, exist_ok=True)
-        self.s3.download_file(Bucket=bucket, Key=key, Filename=local_path, Callback=cb)
+        response = self.s3.get_object(Bucket=bucket, Key=key)
+        with open(local_path, "wb+") as f:
+            body = response["Body"].read()
+            cb(len(body))
+            f.write(body)
 
     def list_objects(self, bucket):
         return self.s3.list_objects_v2(Bucket=bucket, MaxKeys=10000)
 
     def push(self, bucket, key):
         local_path = self.config.path / bucket / key
-        return (self.threads.submit(self.download, bucket, key, local_path), bucket, key, local_path)
+        return self.threads.submit(self.download, bucket, key, local_path)
 
     def set_total(self, total):
         self.progress = tqdm.tqdm(unit='b', unit_scale=True, total=total)
@@ -78,9 +83,11 @@ class downloader:
 if __name__ == "__main__":
     config = parse_args()
 
-    dn = downloader(s3, config)
+    dn = downloader(config)
     results = []
     size_total = 0
+
+    start = time.monotonic()
 
     for bucket in config.bucket:
         resp = dn.list_objects(bucket)
@@ -94,6 +101,10 @@ if __name__ == "__main__":
         try:
             job[1].result()
         except Exception as e:
-            print(f"Error uploading {job[0]}: {str(e)}", file=sys.stderr)
+            print(f"Error downloading {job[0]}: {str(e)}", file=sys.stderr)
 
-    print()
+    end = time.monotonic()
+    seconds = end - start
+    mb = size_total / (1024 * 1024)
+
+    print(f"average download speed: {mb/seconds} MB/s")

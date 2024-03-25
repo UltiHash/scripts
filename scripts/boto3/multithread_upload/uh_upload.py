@@ -7,6 +7,7 @@ import botocore
 import os
 import pathlib
 import sys
+import time
 import tqdm
 
 AWS_KEY_ID="key-id"
@@ -31,6 +32,8 @@ def parse_args():
         action='store', default=60, type=int)
     parser.add_argument('--max-attempts', help='maximum number of upload attempts',
         action='store', default=3, type=int)
+    parser.add_argument('-q', '--quiet', help='do not show progress bar',
+        action='store_true', dest='quiet')
 
     return parser.parse_args()
 
@@ -49,6 +52,7 @@ class uploader:
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
         self.progress = None
         self.count_buffer = 0
+        self.quiet = config.quiet
 
     def upload(self, path, bucket):
         def cb(count):
@@ -65,10 +69,15 @@ class uploader:
     def push(self, bucket, path):
         return self.threads.submit(self.upload, bucket, path)
 
+    def stop(self):
+        if self.progress is not None:
+            self.progress.close()
+
     def set_total(self, total):
-        self.progress = tqdm.tqdm(unit='b', unit_scale=True, total=total)
-        self.progress.update(self.count_buffer)
-        self.count_buffer = 0
+        if not self.quiet:
+            self.progress = tqdm.tqdm(unit='b', unit_scale=True, total=total)
+            self.progress.update(self.count_buffer)
+            self.count_buffer = 0
 
 
 if __name__ == "__main__":
@@ -78,6 +87,8 @@ if __name__ == "__main__":
     results = []
     size_total = 0
 
+    start = time.monotonic()
+
     for path in config.path:
         path = path.resolve()
 
@@ -86,9 +97,18 @@ if __name__ == "__main__":
         else:
             bucket = path.name
 
-        print(f"\ruploading {path} to bucket {bucket}", end="")
+        if not config.quiet:
+            print(f"\ruploading {path} to bucket {bucket}", end="")
 
-        up.mk_bucket(bucket)
+        try:
+            up.mk_bucket(bucket)
+        except:
+            pass
+
+        if path.is_file():
+            results += [(path, up.push(path, bucket))]
+            size_total += path.stat().st_size
+            continue
 
         for (root, dirs, files) in os.walk(path):
             for file in files:
@@ -104,4 +124,10 @@ if __name__ == "__main__":
         except Exception as e:
             print(f"Error uploading {job[0]}: {str(e)}", file=sys.stderr)
 
-    print()
+    end = time.monotonic()
+    seconds = end - start
+    mb = size_total / (1024 * 1024)
+
+    up.stop()
+
+    print(f"average upload speed: {mb/seconds} MB/s")
