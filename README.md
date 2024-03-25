@@ -26,8 +26,8 @@ Collection of most common integrations code samples to work with UltiHash storag
 <a id="#repository-structure"></a>
 ```
   scripts          # location of all sample scripts with different clients integrations
-    python/boto3   # boto3 sample script integrations, few use-cases inside
-  doc              # additional documentation          
+    boto3          # boto3 sample script integrations, few use-cases inside
+  docs             # additional documentation          
 ```
 ## Getting Started
 <a id="#getting-started"></a>
