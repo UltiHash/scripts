@@ -3,6 +3,7 @@
 import argparse
 import concurrent.futures
 import boto3
+import boto3.s3.transfer
 import botocore
 import os
 import pathlib
@@ -32,6 +33,8 @@ def parse_args():
         action='store', default=60, type=int)
     parser.add_argument('--max-attempts', help='maximum number of upload attempts',
         action='store', default=3, type=int)
+    parser.add_argument('--no-multipart', help='disable multipart upload entirely',
+        action='store_true', dest='no_multipart')
     parser.add_argument('-q', '--quiet', help='do not show progress bar',
         action='store_true', dest='quiet')
 
@@ -48,6 +51,12 @@ class uploader:
                 'mode': 'standard'
             })
 
+        if config.no_multipart:
+            self.transfer_config = boto3.s3.transfer.TransferConfig(
+                multipart_threshold = 16 * 1024 * 1024 * 1024 * 1024)
+        else:
+            self.transfer_config = boto3.s3.transfer.TransferConfig()
+
         self.s3 = boto3.client('s3', endpoint_url=config.url[0], config=s3_cnf,
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
         self.progress = None
@@ -61,7 +70,7 @@ class uploader:
             else:
                 self.count_buffer += count
 
-        self.s3.upload_file(path, Bucket=bucket, Key=path.name, Callback=cb)
+        self.s3.upload_file(path, Bucket=bucket, Key=path.name, Callback=cb, Config=self.transfer_config)
 
     def mk_bucket(self, bucket):
         self.s3.create_bucket(Bucket=bucket)
