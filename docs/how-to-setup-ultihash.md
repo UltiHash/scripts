@@ -89,7 +89,7 @@ etcd:
   nodeSelector: {}
   persistence:
     storageClass: <storage_class>
-		size**: 8Gi 
+    size: <8Gi> 
 
 entrypoint:
   replicas: 1
@@ -213,7 +213,7 @@ collector:
   config:                         
     exporters:
       # 1. Define the required exporters e.g. for metrics prometheus, mind unique name
-			prometheus/mycompany:
+      prometheus/mycompany:
         endpoint: "1.2.3.4:1234"
       # 2. Define the required exporters e.g. for logs loki, mind unique name
       loki/mycompany:
