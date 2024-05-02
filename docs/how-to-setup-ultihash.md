@@ -14,7 +14,7 @@ This document describes the installation process of the UltiHash cluster in a Ku
    (optionally) a valid TLS certificate: for <a href="#inflight_encryption">in-flight encryption</a>.
 2. Dedicated Kubernetes cluster. Recommended to use: Kube API version 1.28.
     <div>
-    <strong>Info:</strong> You can use any In principle any Kubernetes version starting from 1.20 should be fine - we use vanilla API without any specific extensions.
+    <strong>Info:</strong> In principle you can use any Kubernetes version starting from 1.20 - we use vanilla API without any specific extensions.
     </div>
 
 3. Controllers installed:
@@ -49,21 +49,21 @@ The helm chart has to be deployed with dedicated release name and namespace per 
 Those names can be changed.
 
 1. Create Kubernetes namespace with the required name
-```bash
-kubectl create ns <storage>
-```
-1. Provision there the secret named <**registry-credentials**> -  containing the UltiHash registry credentials (see <a href="data_from_uh"> Data Provided By UltiHash section</a>). Replace <**registry_username**> and <**registry_password**> with the received values.
+   ```bash
+   $ kubectl create ns <storage>
+   ```
+2. Provision there the secret named <**registry-credentials**> -  containing the UltiHash registry credentials (see <a href="data_from_uh"> Data Provided By UltiHash section</a>). Replace <**registry_username**> and <**registry_password**> with the received values.
 
-```bash
-kubectl create secret docker-registry <registry-credentials> -n <storage> --docker-server='registry.ultihash.io' --docker-username='<registry_username>' --docker-password='<registry_password>'
-```
+   ```bash
+   $ kubectl create secret docker-registry <registry-credentials> -n <storage> --docker-server='registry.ultihash.io' --docker-username='<registry_username>' --docker-password='<registry_password>'
+   ```
 
-1. Provision a secret  <**ultihash**> with the license key and monitoring token. Replace <**licence_key**> and <**monitoring_token**> with the actual values received from UH.
+3. Provision a secret  <**ultihash**> with the license key and monitoring token. Replace <**licence_key**> and <**monitoring_token**> with the actual values received from UH.
 
-```bash
-kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<license_key>' --from-literal=token='<monitoring_token>'
-```
-1. Create cluster configuration setup. See below the example of minimal configuration setup: `values.yaml`. Replace the following placeholders with the actual values:
+   ```bash
+   $ kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<license_key>' --from-literal=token='<monitoring_token>'
+   ```
+4. Create cluster configuration setup. See below the example of minimal configuration setup: `values.yaml`. Replace the following placeholders with the actual values:
     - <**storage_class**>- storage class name created by the CSI controller.
     - <**domain_name**> - valid domain name for the UltiHash cluster
     - <**ingress_annotations**> - annotations specific to the Ingress controller running on the Kubernetes cluster. For example, the essential annotations for the Nginx Ingress controller:
@@ -71,7 +71,8 @@ kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<l
               kubernetes.io/ingress.class: nginx
               nginx.ingress.kubernetes.io/proxy-body-size: "0"
         ```
-Finally, set the number of replicas and storage size for each service to the desired values.
+Finally, set the number of replicas and storage size for each service to the desired values. 
+:spiral_notepad: The Helm chart supports assigning the following placement constraints: affinity, nodeSelector, tolerations. Feel free to adjust them in the values below.
 ```yaml
 global:                            
   imagePullSecrets:                
@@ -83,10 +84,12 @@ global:
   telemetryExportInterval: 30000
 
 etcd:
+  # ref: https://github.com/bitnami/charts/blob/main/bitnami/etcd/values.yaml
   replicaCount: 1
   resources: {}
   affinity: {}
   nodeSelector: {}
+  tolerations: []
   persistence:
     storageClass: <storage_class>
     size: <8Gi> 
@@ -96,6 +99,7 @@ entrypoint:
   resources: {}
   affinity: {}
   nodeSelector: {}
+  tolerations: []
 
   service:
     type: ClusterIP                   
@@ -110,6 +114,7 @@ storage:
   resources: {}
   affinity: {}
   nodeSelector: {}
+  tolerations: []
   storageClass: <storage_class>             
   storageSize: <10Gi>             
 
@@ -118,6 +123,7 @@ deduplicator:
   resources: {}
   affinity: {}
   nodeSelector: {}
+  tolerations: []
   storageClass: <storage_class>
   storageSize: <10Gi>
 
@@ -126,13 +132,16 @@ directory:
   resources: {}
   affinity: {}
   nodeSelector: {}
+  tolerations: []
   storageClass: <storage_class>
   storageSize: <10Gi>
 
 collector:
+  # ref: https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-collector/values.yaml
   resources: {}
   affinity: {}
   nodeSelector: {}
+  tolerations: []
   extraEnvs:
   - name: UH_POD_IP
     valueFrom:
@@ -156,6 +165,10 @@ collector:
           receivers:
            - otlp
            - prometheus
+
+exporter:
+  # ref: https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml
+  enabled: true
 ```
 The Helm values shown above will install the following UltiHash cluster components:
 
@@ -168,20 +181,45 @@ The Helm values shown above will install the following UltiHash cluster componen
    For advanced configuration navigate to the section <a href="adv_config">Advanced Configuration</a>.
    </div>
 
-1. Login into the UltiHash registry via Helm (**registry_username** to be replaced with the actual user name). Input **registry_password** once helm requests it.
+1. Login into the UltiHash registry via Helm (**<registry_username>** to be replaced with the actual user name). Input **<registry_password>** once helm requests it.
 
    ```bash
-   helm registry login -u **registry_username** registry.ultihash.io
+   $ helm registry login -u <registry_username> registry.ultihash.io
    ```
+     **(Optionally)** Pull the Helm chart to check out its templates and default values. This helps to gain better understanding regarding the UH cluster internals.
+   ```
+   $ helm pull oci://registry.ultihash.io/stable/ultihash-cluster
+   $ tar zxf ultihash-cluster-*
+   $ cd ultihash-cluster
+   ``` 
 
-1. Install the Helm chart with the customized values. The release name in the example is set to <**ultihash**>.
+2. Install the Helm chart with the customized values. The release and namespace names in the example are set to <**ultihash**> and **<storage>** correspondingly.
 
    ```bash
-   helm install <ultihash> oci://[registry.ultihash.io/stable/ultihash-cluster](http://registry.ultihash.io/stable/ultihash-cluster) -n <storage> --values values.yaml --wait
+   $ helm install ultihash oci://registry.ultihash.io/stable/ultihash-cluster -n storage --values values.yaml --wait
    ```
 
 Helm will wait until all services of the UltiHash cluster become ready. Once it exits without errors, the UltiHash cluster has been successfully deployed. Use the <**domain_name**> to interact with the UltiHash cluster.
 
+## Best Practices On UH Cluster Deployment
+* It is recommended to deploy each service's pods on separate Kubernetes nodes, although there are exceptions. Specifically, both the deduplicator and storage pods should be placed on the same physical Kubernetes node to optimize performance.
+The [pod placement](https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/) can be achieved using either `nodeSelector` or `affinity`. To ensure that each pod of a specific service is scheduled on a distinct machine, employ the following example. The provided instance pertains to storage (where `role` = `storage`):
+   ```
+   storage:
+     affinity:
+       podAntiAffinity:
+         requiredDuringSchedulingIgnoredDuringExecution:
+         - labelSelector:
+             matchExpressions:
+             - key: role
+               operator: In
+               values:
+               - storage
+           topologyKey: kubernetes.io/hostname
+   ```
+  For other services, replace the `role` value with `deduplicator`, `entrypoint`, or `directory` correspondingly.
+
+* Etcd pods are flexible in their placement and can be co-located on any machine alongside other service pods.
 
 
 ## Advanced Configuration
