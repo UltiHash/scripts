@@ -186,7 +186,7 @@ The Helm values shown above will install the following UltiHash cluster componen
    ```bash
    $ helm registry login -u <registry_username> registry.ultihash.io
    ```
-     **(Optionally)** Pull the Helm chart to check out its  templates and default values. This helps to gain better understanding regarding the UH cluster internals.
+     **(Optionally)** Pull the Helm chart to check out its templates and default values. This helps to gain better understanding regarding the UH cluster internals.
    ```
    $ helm pull oci://registry.ultihash.io/stable/ultihash-cluster
    $ tar zxf ultihash-cluster-*
