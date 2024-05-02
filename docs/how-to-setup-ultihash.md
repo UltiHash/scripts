@@ -49,21 +49,21 @@ The helm chart has to be deployed with dedicated release name and namespace per 
 Those names can be changed.
 
 1. Create Kubernetes namespace with the required name
-```bash
-kubectl create ns <storage>
-```
-1. Provision there the secret named <**registry-credentials**> -  containing the UltiHash registry credentials (see <a href="data_from_uh"> Data Provided By UltiHash section</a>). Replace <**registry_username**> and <**registry_password**> with the received values.
+   ```bash
+   kubectl create ns <storage>
+   ```
+2. Provision there the secret named <**registry-credentials**> -  containing the UltiHash registry credentials (see <a href="data_from_uh"> Data Provided By UltiHash section</a>). Replace <**registry_username**> and <**registry_password**> with the received values.
 
-```bash
-kubectl create secret docker-registry <registry-credentials> -n <storage> --docker-server='registry.ultihash.io' --docker-username='<registry_username>' --docker-password='<registry_password>'
-```
+   ```bash
+   kubectl create secret docker-registry <registry-credentials> -n <storage> --docker-server='registry.ultihash.io' --docker-username='<registry_username>' --docker-password='<registry_password>'
+   ```
 
-1. Provision a secret  <**ultihash**> with the license key and monitoring token. Replace <**licence_key**> and <**monitoring_token**> with the actual values received from UH.
+3. Provision a secret  <**ultihash**> with the license key and monitoring token. Replace <**licence_key**> and <**monitoring_token**> with the actual values received from UH.
 
-```bash
-kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<license_key>' --from-literal=token='<monitoring_token>'
-```
-1. Create cluster configuration setup. See below the example of minimal configuration setup: `values.yaml`. Replace the following placeholders with the actual values:
+   ```bash
+   kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<license_key>' --from-literal=token='<monitoring_token>'
+   ```
+4. Create cluster configuration setup. See below the example of minimal configuration setup: `values.yaml`. Replace the following placeholders with the actual values:
     - <**storage_class**>- storage class name created by the CSI controller.
     - <**domain_name**> - valid domain name for the UltiHash cluster
     - <**ingress_annotations**> - annotations specific to the Ingress controller running on the Kubernetes cluster. For example, the essential annotations for the Nginx Ingress controller:
@@ -71,7 +71,7 @@ kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<l
               kubernetes.io/ingress.class: nginx
               nginx.ingress.kubernetes.io/proxy-body-size: "0"
         ```
-Finally, set the number of replicas and storage size for each service to the desired values.
+5. Finally, set the number of replicas and storage size for each service to the desired values.
 ```yaml
 global:                            
   imagePullSecrets:                
@@ -168,16 +168,16 @@ The Helm values shown above will install the following UltiHash cluster componen
    For advanced configuration navigate to the section <a href="adv_config">Advanced Configuration</a>.
    </div>
 
-1. Login into the UltiHash registry via Helm (**registry_username** to be replaced with the actual user name). Input **registry_password** once helm requests it.
+1. Login into the UltiHash registry via Helm (**<registry_username>** to be replaced with the actual user name). Input **<registry_password>** once helm requests it.
 
    ```bash
-   helm registry login -u **registry_username** registry.ultihash.io
+   helm registry login -u <registry_username> registry.ultihash.io
    ```
 
-1. Install the Helm chart with the customized values. The release name in the example is set to <**ultihash**>.
+2. Install the Helm chart with the customized values. The release and namespace names in the example are set to <**ultihash**> and **<storage>** correspondingly.
 
    ```bash
-   helm install <ultihash> oci://[registry.ultihash.io/stable/ultihash-cluster](http://registry.ultihash.io/stable/ultihash-cluster) -n <storage> --values values.yaml --wait
+   helm install ultihash oci://registry.ultihash.io/stable/ultihash-cluster -n storage --values values.yaml --wait
    ```
 
 Helm will wait until all services of the UltiHash cluster become ready. Once it exits without errors, the UltiHash cluster has been successfully deployed. Use the <**domain_name**> to interact with the UltiHash cluster.
