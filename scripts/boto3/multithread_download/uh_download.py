@@ -76,7 +76,7 @@ class downloader:
         return self.threads.submit(self.download, bucket, key, local_path)
 
     def set_total(self, total):
-        self.progress = tqdm.tqdm(unit='b', unit_scale=True, total=total)
+        self.progress = tqdm.tqdm(unit='B', unit_scale=True, total=total)
         self.progress.update(self.count_buffer)
         self.count_buffer = 0
 
