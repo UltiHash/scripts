@@ -172,7 +172,7 @@ exporter:
 ```
 The Helm values shown above will install the following UltiHash cluster components:
 
-- OpenTelemetry collector - collect metrics and logs from application and selected metrics from nodes.
+- OpenTelemetry collector - collect metrics and logs from application and selected metrics from nodes. The application level metrics exported by the collector are available [here](./ultihash-metrics.md).
 - Prometheus Node Exporter - exposes node metrics to OpenTelemetry Collector (can be switched off, see <a href="adv_config"> Advanced Configuration</a>)
 - Etcd and UltiHash Internal Services
 
