@@ -226,7 +226,7 @@ The [pod placement](https://kubernetes.io/docs/concepts/scheduling-eviction/assi
 ### How can I assess the percent of saved storage space?
 
 There are two ways to achieve that:
-1. Execute the data [upload script](https://github.com/UltiHash/howto-uh/blob/main/scripts/boto3/simple/simple_upload.py). This script uploads the selected files to the Ultihash cluster and outputs the total percent of the saved storage space as well as the efficient size for each uploaded file. 
+1. Execute the data [upload script](https://github.com/UltiHash/howto-uh/blob/main/scripts/boto3/simple/simple_upload.py). This script uploads the selected files to the Ultihash cluster and outputs the total percent of the saved storage space as well as the effective size for each uploaded file. 
 2. Check out the following application level metrics exported by the Ultihash cluster: `entrypoint_ingested_data_counter` and `storage_used_space_gauge`. The formula below calculates the percent of the saved storage space: 
    ```
    100 * (entrypoint_ingested_data_counter - storage_used_space_gauge) / entrypoint_ingested_data_counter 
