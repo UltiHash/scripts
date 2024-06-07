@@ -55,7 +55,8 @@ class uploader:
             self.transfer_config = boto3.s3.transfer.TransferConfig(
                 multipart_threshold = 16 * 1024 * 1024 * 1024 * 1024)
         else:
-            self.transfer_config = boto3.s3.transfer.TransferConfig()
+            self.transfer_config = boto3.s3.transfer.TransferConfig(
+                multipart_chunksize = 64 * 1024 * 1024)
 
         self.s3 = boto3.client('s3', endpoint_url=config.url[0], config=s3_cnf,
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
