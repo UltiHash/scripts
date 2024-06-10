@@ -148,8 +148,8 @@ if __name__ == "__main__":
 
     if (config.otel_url):
         otel = otel_exporter(config.otel_url[0], config.test_name[0])
-        otel.create_metric("bandwidth")
-        otel.push_value("bandiwdth", float(mb)/seconds)
+        otel.create_metric("upload-bandwidth")
+        otel.push_value("upload-bandiwdth", float(mb)/seconds)
     
 
     print(f"average upload speed: {mb/seconds} MB/s")
