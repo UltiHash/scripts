@@ -89,10 +89,7 @@ class uploader:
             self.progress.update(self.count_buffer)
             self.count_buffer = 0
 
-
-if __name__ == "__main__":
-    config = parse_args()
-
+def upload (config):
     up = uploader(config)
     results = []
     size_total = 0
@@ -139,5 +136,14 @@ if __name__ == "__main__":
     mb = size_total / (1024 * 1024)
 
     up.stop()
-
     print(f"average upload speed: {mb/seconds} MB/s")
+
+    return float(mb)/seconds
+
+if __name__ == "__main__":
+    config = parse_args()
+    upload(config)
+        
+    
+    
+
