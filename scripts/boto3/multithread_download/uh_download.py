@@ -8,8 +8,6 @@ import pathlib
 import sys
 import time
 import tqdm
-sys.path.insert(1,'../../otel')
-from otel_exporter import otel_exporter
 
 AWS_KEY_ID="key-id"
 AWS_KEY_SECRET="secret"
@@ -23,10 +21,6 @@ def parse_args():
         type=pathlib.Path, default='.')
     parser.add_argument('-u', '--url', help='override default S3 endpoint',
         nargs=1, default='http://localhost:8080', dest='url')
-    parser.add_argument('--test-name', help='name of the test',
-        nargs=1, default='unnamed', dest='test_name')
-    parser.add_argument('--otel-url', help='open telemetry url',
-        nargs=1, dest='otel_url')
     parser.add_argument('-v', '--verbose', help='write additional information to stdout',
         action='store_true', dest='verbose')
     parser.add_argument('bucket', help='download all files of the given bucket',
@@ -84,9 +78,8 @@ class downloader:
         self.progress.update(self.count_buffer)
         self.count_buffer = 0
 
-if __name__ == "__main__":
-    config = parse_args()
-
+def download(config):
+    
     dn = downloader(config)
     results = []
     size_total = 0
@@ -110,11 +103,10 @@ if __name__ == "__main__":
     end = time.monotonic()
     seconds = end - start
     mb = size_total / (1024 * 1024)
-    
-    if (config.otel_url):
-        otel = otel_exporter(config.otel_url[0], config.test_name[0])
-        otel.create_metric("download-bandwidth")
-        otel.push_value("download-bandiwdth", float(mb)/seconds)
-    
 
     print(f"average download speed: {mb/seconds} MB/s")
+    return float(mb)/seconds
+
+if __name__ == "__main__":
+    config = parse_args()
+    download(config)
