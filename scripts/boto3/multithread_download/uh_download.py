@@ -2,10 +2,8 @@
 
 import argparse
 import concurrent.futures
-import pprint
 import boto3
 import botocore
-import os
 import pathlib
 import sys
 import time
@@ -80,9 +78,8 @@ class downloader:
         self.progress.update(self.count_buffer)
         self.count_buffer = 0
 
-if __name__ == "__main__":
-    config = parse_args()
-
+def download(config):
+    
     dn = downloader(config)
     results = []
     size_total = 0
@@ -108,3 +105,8 @@ if __name__ == "__main__":
     mb = size_total / (1024 * 1024)
 
     print(f"average download speed: {mb/seconds} MB/s")
+    return float(mb)/seconds
+
+if __name__ == "__main__":
+    config = parse_args()
+    download(config)
