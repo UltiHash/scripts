@@ -127,14 +127,21 @@ deduplicator:
   storageClass: <storage_class>
   storageSize: <10Gi>
 
-directory:
-  replicas: 1
-  resources: {}
+database:
+  # ref: https://github.com/bitnami/charts/blob/postgresql/15.3.2/bitnami/postgresql/values.yaml
+  primary:
+    affinity: {}
+    nodeSelector: {}
+    tolerations: []
+
+    persistence:
+      storageClass: <storage_class>
+      size: <10Gi>
+
+databaseInit:
   affinity: {}
   nodeSelector: {}
   tolerations: []
-  storageClass: <storage_class>
-  storageSize: <10Gi>
 
 collector:
   # ref: https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-collector/values.yaml
@@ -217,7 +224,7 @@ The [pod placement](https://kubernetes.io/docs/concepts/scheduling-eviction/assi
                - storage
            topologyKey: kubernetes.io/hostname
    ```
-  For other services, replace the `role` value with `deduplicator`, `entrypoint`, or `directory` correspondingly.
+  For other services, replace the `role` value with `deduplicator` or `entrypoint` correspondingly.
 
 * Etcd pods are flexible in their placement and can be co-located on any machine alongside other service pods.
 
