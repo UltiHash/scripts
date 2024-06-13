@@ -128,6 +128,7 @@ deduplicator:
   storageSize: <10Gi>
 
 database:
+  # ref: https://github.com/bitnami/charts/blob/postgresql/15.3.2/bitnami/postgresql/values.yaml
   primary:
     affinity: {}
     nodeSelector: {}
