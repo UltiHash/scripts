@@ -29,6 +29,8 @@ def parse_args():
         action='store')
     parser.add_argument('-j', '--jobs', help='number of concurrent jobs',
         action='store', default=8, type=int)
+    parser.add_argument('-C', '--connections', help='number of connections per job',
+        action='store', default=10, type=int)
     parser.add_argument('--read-timeout', help='read timeout in seconds',
         action='store', default=60, type=int)
     parser.add_argument('--max-attempts', help='maximum number of upload attempts',
@@ -53,10 +55,12 @@ class uploader:
 
         if config.no_multipart:
             self.transfer_config = boto3.s3.transfer.TransferConfig(
-                multipart_threshold = 16 * 1024 * 1024 * 1024 * 1024)
+                multipart_threshold = 16 * 1024 * 1024 * 1024 * 1024,
+                max_concurrency=config.connections)
         else:
             self.transfer_config = boto3.s3.transfer.TransferConfig(
-                multipart_chunksize = 64 * 1024 * 1024)
+                multipart_chunksize = 64 * 1024 * 1024,
+                max_concurrency=config.connections)
 
         self.s3 = boto3.client('s3', endpoint_url=config.url[0], config=s3_cnf,
             aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
@@ -143,7 +147,7 @@ def upload (config):
 if __name__ == "__main__":
     config = parse_args()
     upload(config)
-        
-    
-    
+
+
+
 
