@@ -37,6 +37,8 @@ def parse_args():
         action='store', default=3, type=int)
     parser.add_argument('--no-multipart', help='disable multipart upload entirely',
         action='store_true', dest='no_multipart')
+    parser.add_argument('--multipart-chunksize', help='size of multipart upload chunks',
+        action='store', default=8*1024*1024, type=int)
     parser.add_argument('-q', '--quiet', help='do not show progress bar',
         action='store_true', dest='quiet')
 
@@ -59,7 +61,7 @@ class uploader:
                 max_concurrency=config.connections)
         else:
             self.transfer_config = boto3.s3.transfer.TransferConfig(
-                multipart_chunksize = 64 * 1024 * 1024,
+                multipart_chunksize = config.multipart_chunksize,
                 max_concurrency=config.connections)
 
         self.s3 = boto3.client('s3', endpoint_url=config.url[0], config=s3_cnf,
