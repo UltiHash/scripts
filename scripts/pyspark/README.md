@@ -5,7 +5,7 @@ This document provides information regarding the integration between UltiHash an
 ## Spark Configuration
 
 Spark relies on [S3A module](https://hadoop.apache.org/docs/stable/hadoop-aws/tools/hadoop-aws/index.html) to provide connectivity with endpoints suppording S3 protocol. Below is an example of the S3A module configuration that connects PySpark with the UltiHash cluster:
-```
+```python
 from pyspark.sql import SparkSession
 
 # Create Spark session
