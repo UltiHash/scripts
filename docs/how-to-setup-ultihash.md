@@ -230,6 +230,9 @@ The [pod placement](https://kubernetes.io/docs/concepts/scheduling-eviction/assi
 
 ## Frequently Asked Questions
 
+### How can I integrate UltiHash with my tools?
+To see all tested integrations, attend the page [UltiHash Integrations](./integrations.md) 
+
 ### How can I assess the percent of saved storage space?
 
 There are two ways to achieve that:
