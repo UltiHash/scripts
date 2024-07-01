@@ -12,8 +12,7 @@ if __name__ == "__main__":
 
     # connection to UltiHash S3 service
     uh_url = sys.argv[1]
-    uh_service = boto3.client('s3', endpoint_url=uh_url,
-        aws_access_key_id='', aws_secret_access_key='')
+    uh_service = boto3.client('s3', endpoint_url=uh_url)
 
     # all data will be stored under
     target_bucket_name = "bucket"

@@ -11,9 +11,6 @@ import sys
 import time
 import tqdm
 
-AWS_KEY_ID="key-id"
-AWS_KEY_SECRET="secret"
-
 def parse_args():
     parser = argparse.ArgumentParser(
         prog='UH upload',
@@ -64,8 +61,7 @@ class uploader:
                 multipart_chunksize = config.multipart_chunksize,
                 max_concurrency=config.connections)
 
-        self.s3 = boto3.client('s3', endpoint_url=config.url[0], config=s3_cnf,
-            aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
+        self.s3 = boto3.client('s3', endpoint_url=config.url[0], config=s3_cnf)
         self.progress = None
         self.count_buffer = 0
         self.quiet = config.quiet
