@@ -21,6 +21,9 @@ Install all requirements:
 ```
 $> pip install --requirement requirements.txt
 ```
+Before executing the script make sure the AWS credentials are properly set:
+- as [environment variables](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html#envvars-set)
+- as [instance profile](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-methods)
 
 # Usage
 To download a bucket from an UH cluster running locally:
