@@ -63,7 +63,10 @@ class downloader:
             f.write(body)
 
     def list_objects(self, bucket):
-        return self.s3.list_objects_v2(Bucket=bucket, MaxKeys=10000)
+        paginator = self.s3.get_paginator('list_objects_v2')
+        for page in paginator.paginate(Bucket=bucket):
+            for entry in page['Contents']:
+                yield entry
 
     def push(self, bucket, key):
         local_path = self.config.path / bucket / key
@@ -83,8 +86,7 @@ def download(config):
     start = time.monotonic()
 
     for bucket in config.bucket:
-        resp = dn.list_objects(bucket)
-        for entry in resp['Contents']:
+        for entry in dn.list_objects(bucket):
             results += [ (entry['Key'],  dn.push(bucket, entry['Key'])) ]
             size_total += entry['Size']
 
