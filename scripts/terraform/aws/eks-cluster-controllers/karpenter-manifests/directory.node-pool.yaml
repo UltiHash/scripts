@@ -1,0 +1,29 @@
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: directory-node
+spec:
+  template:
+    metadata:
+      labels:
+        workload-type: directory
+        purpose: ultihash-testing
+    spec:
+      requirements:
+        - key: karpenter.sh/capacity-type
+          operator: In
+          values: ["on-demand"]
+        - key: node.kubernetes.io/instance-type
+          operator: In
+          values: ["c7gd.4xlarge"]
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: ultihash-testing
+      taints:
+        - key: purpose
+          value: ultihash-testing
+          effect: NoSchedule
+  disruption:
+    consolidationPolicy: WhenEmpty
+    consolidateAfter: 30m
