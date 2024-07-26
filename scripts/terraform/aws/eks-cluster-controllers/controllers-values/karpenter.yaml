@@ -1,0 +1,8 @@
+replicas: 1
+settings:
+  clusterName: ${cluster_name}
+  clusterEndpoint: ${cluster_endpoint}
+  interruptionQueue: ${karpenter_interruption_queue}
+serviceAccount:
+  annotations:
+    eks.amazonaws.com/role-arn: ${karpenter_iam_role}

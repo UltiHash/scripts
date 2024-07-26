@@ -1,0 +1,170 @@
+global:
+  imagePullPolicy: Always
+  imagePullSecrets:               
+    - registry-credentials
+  ultihashSecret:
+    name: ultihash
+    key: license
+  logLevel: INFO
+  telemetryExportInterval: 30000
+
+etcd:
+  replicaCount: 1
+  nodeSelector:
+    workload-type: directory
+    purpose: ultihash-testing
+  tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+  persistence:
+    size: 100Gi
+    storageClass: local-path
+
+entrypoint:
+  replicas: 1
+  nodeSelector:
+    workload-type: entrypoint
+    purpose: ultihash-testing
+  tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: role
+            operator: In
+            values:
+            - entrypoint
+        topologyKey: kubernetes.io/hostname
+  extraEnv:
+    - name: UH_DB_DIRECTORY_CONNECTIONS
+      value: "5"
+    - name: UH_DB_MULTIPART_CONNECTIONS
+      value: "5"
+
+  ingress:
+    host: 
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+
+storage:
+  replicas: 2
+  storageClass: local-path          
+  storageSize: 7Ti
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: role
+            operator: In
+            values:
+            - storage
+        topologyKey: kubernetes.io/hostname                  
+  nodeSelector:
+    workload-type: storage
+    purpose: ultihash-testing
+  tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+
+deduplicator:
+  replicas: 2
+  storageClass: local-path
+  storageSize: 1Ti
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+          - key: role
+            operator: In
+            values:
+            - deduplicator
+        topologyKey: kubernetes.io/hostname
+  nodeSelector:
+    workload-type: storage
+    purpose: ultihash-testing
+  tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+
+database:
+  primary:
+    nodeSelector:
+      workload-type: directory
+      purpose: ultihash-testing
+    tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+
+    persistence:
+      storageClass: local-path
+      size: 1Ti
+
+databaseInit:
+  nodeSelector:
+    workload-type: directory
+    purpose: ultihash-testing
+  tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+
+collector:
+  nodeSelector:
+    purpose: ultihash-testing
+  tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+  extraEnvs:
+  - name: UH_POD_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.podIP
+  - name: UH_NODE_IP
+    valueFrom:
+      fieldRef:
+        fieldPath: status.hostIP
+  - name: UH_EXPORTER_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: ultihash
+        key: token
+  presets:
+    kubeletMetrics:              
+      enabled: false           
+  config:                         
+    exporters:
+      otlphttp/uptrace:
+        endpoint: https://collector.ultihash.io
+        headers:
+          uptrace-dsn: https://${env:UH_EXPORTER_TOKEN}@collector.ultihash.io
+    receivers:
+      prometheus: null
+      kubeletstats: null
+    service:
+      pipelines:
+        metrics:
+          receivers:
+            - otlp
+
+exporter:
+  enabled: false
+                   
