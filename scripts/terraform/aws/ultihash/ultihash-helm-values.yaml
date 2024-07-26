@@ -23,7 +23,7 @@ etcd:
     storageClass: local-path
 
 entrypoint:
-  replicas: 2
+  replicas: 1
   nodeSelector:
     workload-type: entrypoint
     purpose: ultihash-testing

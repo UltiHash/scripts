@@ -13,5 +13,5 @@ cluster_name    = "ultihash-test" # Human readable name for the EKS cluster
 cluster_version = "1.28"          # Kubernetes engine version for the EKS cluster
 
 cluster_admins = [
-  "arn:aws:iam::account_id:user/test-user" # List of IAM roles or IAM users to grant admin access to the EKS cluster
+  "arn:aws:iam::account_id:user/test-user" # REQUIRED TO CHANGE: List of IAM roles or IAM users to grant admin access to the EKS cluster
 ]

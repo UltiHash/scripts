@@ -10,9 +10,9 @@ terraform {
     }
   }
   backend "s3" {
-    bucket = "terraform-state-test-setup" # Update the bucket name for the Terraform state
+    bucket = "terraform-state-test-setup"   # REQUIRED TO CHANGE: Update the bucket name for the Terraform state
     key    = "ultihash/terraform.tfstate"
-    region = "eu-central-1" # Update the bucket region for the Terraform state
+    region = "eu-central-1"                 # REQUIRED TO CHANGE: Update the bucket region for the Terraform state
   }
 }
 
@@ -20,9 +20,9 @@ data "terraform_remote_state" "eks_cluster" {
   backend = "s3"
 
   config = {
-    bucket = "terraform-state-test-setup" # Update the bucket name for the Terraform state
+    bucket = "terraform-state-test-setup" # REQUIRED TO CHANGE: Update the bucket name for the Terraform state
     key    = "eks-cluster/terraform.tfstate"
-    region = "eu-central-1" # Update the bucket region for the Terraform state
+    region = "eu-central-1"               # REQUIRED TO CHANGE: Update the bucket region for the Terraform state
   }
 }
 
