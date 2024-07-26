@@ -13,19 +13,19 @@ The overall available disk space provided by this UltiHash setup is 15 TB. In ca
 
 Please note, that this setup is suited for the testing purposes to verify the abilities of UltiHash as well as its integration with various tools and technologies. Since the product is yet in the development phase, avoid deploying it in the production environment!
 
-## Prerequisites
+# Prerequisites
 
-# Remove Environment
+## Remote Environment
 - AWS account
 
-# Local Environment
+## Local Environment
 - [installed](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [configured](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html#cli-configure-files-methods) AWS CLI
 - [installed](https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli) terraform
 - [installed](https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.28.md#v1280) kubectl of version 1.28
 - received credentials from UltiHash representatives such as registry login and password, license, and monitoring token
 
 ## Setup S3 Bucket for Terraform States
-Since the Terrafom state for this setup has to be stored on S3, need to provision a dedicated S3 bucket.
+Since the Terraform state for this setup has to be stored on S3, need to provision a dedicated S3 bucket.
 Execute the following command, replacing the `<bucket-name>` and `<aws-region>` placeholders:
 ```
 aws s3api create-bucket --bucket <bucket-name> --create-bucket-configuration LocationConstraint=<aws-region>
@@ -52,9 +52,9 @@ Once the [howto-uh](#clone-the-howto-uh-repository) repository is cloned, perfor
    ```
    Wait until the installation is completed.
 
-Make sure the access to the EKS cluster has been granted to the required IAM users and roles To check that, download the `kubeconfig` for the EKS cluster, executing the command below. Replace the <cluster-name> (by default `ultihash-test`) and the <aws-region> (by default `eu-central-1`) with the corresponding values defined in [config.tfvars](../scripts/terraform/aws/eks-cluster/config.tfvars)
+Make sure the access to the EKS cluster has been granted to the required IAM users and roles To check that, download the `kubeconfig` for the EKS cluster, executing the command below. Replace the `<cluster-name>` (by default `ultihash-test`) and the `<aws-region>` (by default `eu-central-1`) with the corresponding values defined in [config.tfvars](../scripts/terraform/aws/eks-cluster/config.tfvars)
 ```
-aws eks update-kubeconfig --name ultihash-test --region eu-central-1
+aws eks update-kubeconfig --name <cluster-name> --region <aws-region>
 ```
 Execute the following `kubectl` command to check the available EKS cluster nodes:
 ```
@@ -94,7 +94,7 @@ Perform the following actions to deploy the Terraform project:
    ```
    Wait until the installation is completed.
 
-The UltiHash cluster is installed in the `default` Kuberentes namespace, you `kubectl` to see the deployed workfloads:
+The UltiHash cluster is installed in the `default` Kuberentes namespace, you `kubectl` to see the deployed workloads:
 ```
 kubectl get all
 ```
