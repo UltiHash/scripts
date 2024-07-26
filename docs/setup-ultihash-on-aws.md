@@ -67,7 +67,10 @@ The next step is installation of the essential Kubernetes controllers on the pro
 - `Nginx Ingress` - exposes UltiHash outside of the EKS cluster with a Network Load Balancer 
 - `Load Balancer Controller` - provisions a Network Load Balancer for the `Nginx Ingress` controller
 - `Karpenter` - provisions EC2 instances on-demand to host UltiHash workloads
-- `Local Path Provisioner` - CSI controller that automatically provisions persistent volumes for the UltiHash workfloads. These volumes are bound to the NVMe SSD instance store available on the machines provisioned by `Karpenter`
+- `Local Path Provisioner` - CSI controller that automatically provisions non-persistent volumes for the UltiHash workfloads. These volumes are bound to the NVMe SSD instance store available on the machines provisioned by `Karpenter`
+- `EBS CSI Driver` - CSI controller that automatically provisions persistent volumes the UltiHash workfloads. The volumes are based on `gp3` storage class and optimised in terms of performance 
+
+ :ledger: Note, that the volumes provisioned by `Local Path Provisioner` are non persistent! Once EC2 instance is removed, all its accosiated volumes will be removed as well. If during the testing, it is required to remove the EC2 instances without loosing their volumes, use `EBS CSI Driver` instead.
 
 Perform the following actions to deploy the Terraform project:
 1. Update the `bucket name` and its `region` in the [main.tf](../scripts/terraform/aws/eks-cluster-controllers/main.tf) with the onces done at [the previous step](#setup-s3-bucket-for-terraform-states).

@@ -17,6 +17,20 @@ resource "helm_release" "local-path-provisioner" {
   create_namespace = true
 }
 
+module "ebs-csi-driver" {
+  source  = "lablabs/eks-ebs-csi-driver/aws"
+  version = "0.1.0"
+
+  cluster_identity_oidc_issuer     = data.terraform_remote_state.eks_cluster.outputs.cluster_oidc_issuer_url
+  cluster_identity_oidc_issuer_arn = data.terraform_remote_state.eks_cluster.outputs.cluster_oidc_provider_arn
+
+  helm_repo_url      = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+  helm_chart_name    = "aws-ebs-csi-driver"
+  helm_chart_version = "2.27.0"
+
+  namespace = "kube-system"
+}
+
 module "load-balancer-controller" {
   source  = "DNXLabs/eks-lb-controller/aws"
   version = "0.9.0"
