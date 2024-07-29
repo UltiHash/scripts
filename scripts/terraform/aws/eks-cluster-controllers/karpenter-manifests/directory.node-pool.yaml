@@ -26,4 +26,4 @@ spec:
           effect: NoSchedule
   disruption:
     consolidationPolicy: WhenEmpty
-    consolidateAfter: 30m
+    consolidateAfter: 10m
