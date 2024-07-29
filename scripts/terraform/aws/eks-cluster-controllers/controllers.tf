@@ -29,6 +29,11 @@ module "ebs-csi-driver" {
   helm_chart_version = "2.27.0"
 
   namespace = "kube-system"
+
+  storage_classes = [
+    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "ebs-csi-gp3", "parameters" : { "type" : "gp3" }, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" },
+    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "gp3-high-performance", "parameters" : { "type" : "gp3", "iops" : "16000", throughput : "1000" }, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" }
+  ]
 }
 
 module "load-balancer-controller" {
@@ -97,6 +102,10 @@ resource "helm_release" "karpenter" {
   values = [
     data.template_file.karpenter.rendered
   ]
+
+  depends_on = [
+    module.karpenter
+  ]
 }
 
 data "template_file" "karpenter_ec2_node_class" {
@@ -106,10 +115,10 @@ data "template_file" "karpenter_ec2_node_class" {
   }
 }
 
-resource "kubernetes_manifest" "installation" {
+resource "kubectl_manifest" "installation" {
   for_each = merge(local.karpernter_node_pools, { "ec2-node-class" : data.template_file.karpenter_ec2_node_class.rendered })
 
-  manifest = yamldecode(each.value)
+  yaml_body = each.value
 
   depends_on = [
     helm_release.karpenter

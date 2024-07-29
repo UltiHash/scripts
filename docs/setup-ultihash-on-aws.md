@@ -111,6 +111,7 @@ To uninstall all previously deployed AWS resources follow these steps:
    ```
    cd scripts/terraform/aws/ultihash
    terraform destroy --var-file config.tfvars
+   kubectl delete pvc --all
    ``` 
 2. Uninstall Kubernetes controllers:
    ```
