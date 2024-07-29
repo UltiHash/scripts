@@ -17,6 +17,25 @@ resource "helm_release" "local-path-provisioner" {
   create_namespace = true
 }
 
+module "ebs-csi-driver" {
+  source  = "lablabs/eks-ebs-csi-driver/aws"
+  version = "0.1.0"
+
+  cluster_identity_oidc_issuer     = data.terraform_remote_state.eks_cluster.outputs.cluster_oidc_issuer_url
+  cluster_identity_oidc_issuer_arn = data.terraform_remote_state.eks_cluster.outputs.cluster_oidc_provider_arn
+
+  helm_repo_url      = "https://kubernetes-sigs.github.io/aws-ebs-csi-driver"
+  helm_chart_name    = "aws-ebs-csi-driver"
+  helm_chart_version = "2.27.0"
+
+  namespace = "kube-system"
+
+  storage_classes = [
+    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "ebs-csi-gp3", "parameters" : { "type" : "gp3" }, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" },
+    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "gp3-high-performance", "parameters" : { "type" : "gp3", "iops" : "16000", throughput : "1000" }, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" }
+  ]
+}
+
 module "load-balancer-controller" {
   source  = "DNXLabs/eks-lb-controller/aws"
   version = "0.9.0"
@@ -83,6 +102,10 @@ resource "helm_release" "karpenter" {
   values = [
     data.template_file.karpenter.rendered
   ]
+
+  depends_on = [
+    module.karpenter
+  ]
 }
 
 data "template_file" "karpenter_ec2_node_class" {
@@ -92,10 +115,10 @@ data "template_file" "karpenter_ec2_node_class" {
   }
 }
 
-resource "kubernetes_manifest" "installation" {
+resource "kubectl_manifest" "installation" {
   for_each = merge(local.karpernter_node_pools, { "ec2-node-class" : data.template_file.karpenter_ec2_node_class.rendered })
 
-  manifest = yamldecode(each.value)
+  yaml_body = each.value
 
   depends_on = [
     helm_release.karpenter

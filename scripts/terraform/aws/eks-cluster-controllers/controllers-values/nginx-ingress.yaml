@@ -15,7 +15,7 @@ controller:
       https: http
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-name: ultihash-test
-      service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing  # Use 'internal' to provision internal NLB
+      service.beta.kubernetes.io/aws-load-balancer-scheme: internal  # Use 'internet-facing' to provision a public NLB
       service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
       service.beta.kubernetes.io/aws-load-balancer-healthcheck-protocol: http
       service.beta.kubernetes.io/aws-load-balancer-healthcheck-path: /healthz
