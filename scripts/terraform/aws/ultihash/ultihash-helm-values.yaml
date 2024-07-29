@@ -20,7 +20,7 @@ etcd:
       effect: "NoSchedule"
   persistence:
     size: 100Gi
-    storageClass: local-path   # Replace with 'ebs-csi-gp3' to create persistent volume
+    storageClass: local-path   # REQUIRED TO CHANGE: Replace with 'ebs-csi-gp3' to create persistent volume
 
 entrypoint:
   replicas: 1
@@ -56,7 +56,7 @@ entrypoint:
 
 storage:
   replicas: 2
-  storageClass: local-path    # Use 'gp3-high-performance' to create persistent volume       
+  storageClass: local-path    # REQUIRED TO CHANGE: Use 'gp3-high-performance' to create persistent volume       
   storageSize: 5Ti
   affinity:
     podAntiAffinity:
@@ -79,7 +79,7 @@ storage:
 
 deduplicator:
   replicas: 2
-  storageClass: local-path   # Replace with 'gp3-high-performance' to create persistent volume
+  storageClass: local-path   # REQUIRED TO CHANGE: Replace with 'gp3-high-performance' to create persistent volume
   storageSize: 300Gi
   affinity:
     podAntiAffinity:
@@ -112,7 +112,7 @@ database:
       effect: "NoSchedule"
 
     persistence:
-      storageClass: local-path    # Replace with 'gp3-high-performance' to create persistent volume 
+      storageClass: local-path    # REQUIRED TO CHANGE: Replace with 'gp3-high-performance' to create persistent volume 
       size: 300Gi
 
 databaseInit:

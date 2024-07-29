@@ -67,10 +67,10 @@ The next step is installation of the essential Kubernetes controllers on the pro
 - `Nginx Ingress` - exposes UltiHash outside of the EKS cluster with a Network Load Balancer 
 - `Load Balancer Controller` - provisions a Network Load Balancer for the `Nginx Ingress` controller
 - `Karpenter` - provisions EC2 instances on-demand to host UltiHash workloads
-- `Local Path Provisioner` - CSI controller that automatically provisions non-persistent volumes for the UltiHash workfloads. These volumes are bound to the NVMe SSD instance store available on the machines provisioned by `Karpenter`
+- `Local Path Provisioner` - CSI controller that automatically provisions non-persistent volumes for the UltiHash workloads. These volumes are bound to the NVMe SSD instance store available on the machines provisioned by `Karpenter`
 - `EBS CSI Driver` - CSI controller that automatically provisions persistent volumes the UltiHash workfloads. The volumes are based on `gp3` storage class and optimised in terms of performance 
 
- :ledger: Note, that the volumes provisioned by `Local Path Provisioner` are non persistent! Once EC2 instance is removed, all its accosiated volumes will be removed as well. If during the testing, it is required to remove the EC2 instances without loosing their volumes, use `EBS CSI Driver` instead.
+ :ledger: Note, that the volumes provisioned by `Local Path Provisioner` are non persistent! Once EC2 instance is removed, all its accosiated volumes will be removed as well. If during the testing, it is required to remove the EC2 instances to save the costs without loosing their volumes, use `EBS CSI Driver` instead. This requires modification of the UltiHash Helm values, which will be explaned [at a later step](#ultihash-installation).
 
 Perform the following actions to deploy the Terraform project:
 1. Update the `bucket name` and its `region` in the [main.tf](../scripts/terraform/aws/eks-cluster-controllers/main.tf) with the onces done at [the previous step](#setup-s3-bucket-for-terraform-states).
@@ -88,7 +88,7 @@ Perform the following actions to deploy the Terraform project:
 The last step is installation of UltiHash. For this purpose use [this Terraform project](../scripts/terraform/aws/ultihash/).
 Perform the following actions to deploy the Terraform project:
 1. Update the `bucket name` and its `region` in the [main.tf](../scripts/terraform/aws/ultihash/main.tf) with the ones done at [the previous step](#setup-s3-bucket-for-terraform-states).
-2. Update the configuration in [config.tfvars](../scripts/terraform/aws/ultihash/config.tfvars) with the credentials received from UltiHash representatives. The credentials in the `config.tfvars` are mocked. The helm values for UltiHash are found [here](../scripts/terraform/aws/ultihash/ultihash-helm-values.yaml). Feel free to scale the number of `entrypoint`, `storage`, and `deduplicator` instance if required.
+2. Update the configuration in [config.tfvars](../scripts/terraform/aws/ultihash/config.tfvars) with the credentials received from UltiHash representatives. The credentials in the `config.tfvars` are mocked. The helm values for UltiHash are found [here](../scripts/terraform/aws/ultihash/ultihash-helm-values.yaml). The only required change in the Helm values is the storage class for `etcd`, `storage`, `deduplicator`, and `database`. In case persistence is not required, use `local-path` storage class. Otherwise select `gp3-high-performance` (in case of `etcd` it will be `ebs-csi-gp3`). Feel free also to scale the number of `entrypoint`, `storage`, and `deduplicator` instances if required.
 3. Initialize and apply the Terraform project
    ```
    cd scripts/terraform/aws/ultihash
