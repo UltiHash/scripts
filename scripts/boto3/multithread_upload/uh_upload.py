@@ -72,8 +72,7 @@ class uploader:
                 self.progress.update(count)
             else:
                 self.count_buffer += count
-
-        self.s3.upload_file(path, Bucket=bucket, Key=path.name, Callback=cb, Config=self.transfer_config)
+        self.s3.upload_file(path, Bucket=bucket, Key=str(path), Callback=cb, Config=self.transfer_config)
 
     def mk_bucket(self, bucket):
         self.s3.create_bucket(Bucket=bucket)
@@ -99,7 +98,6 @@ def upload (config):
     start = time.monotonic()
 
     for path in config.path:
-        path = path.resolve()
 
         if config.bucket is not None:
             bucket = config.bucket
@@ -121,9 +119,9 @@ def upload (config):
 
         for (root, dirs, files) in os.walk(path):
             for file in files:
-                fullpath = pathlib.Path(root) / file
-                size_total += fullpath.stat().st_size
-                results += [(fullpath, up.push(fullpath, bucket))]
+                filepath = pathlib.Path(root) / file
+                size_total += filepath.stat().st_size
+                results += [(filepath, up.push(filepath, bucket))]
 
     up.set_total(size_total)
 

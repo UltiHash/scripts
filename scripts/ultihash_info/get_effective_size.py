@@ -1,11 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Jun 10 11:22:39 2024
-
-@author: massi
-"""
-
 import argparse
 import boto3
 import botocore
@@ -38,7 +32,7 @@ def get_effective_size(config):
     body = response['Body']#.read()
     jbody = json.load(body)
     effective_size = jbody['effective_data_size']
-    print(f"Ultihash effective size is {effective_size} MB")
+    print(f"Ultihash effective size is {effective_size} Bytes")
     return effective_size
 
 if __name__ == "__main__":
