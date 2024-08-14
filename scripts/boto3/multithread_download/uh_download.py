@@ -69,7 +69,10 @@ class downloader:
                 yield entry
 
     def push(self, bucket, key):
-        local_path = self.config.path / bucket / key
+        if (self.config.path == pathlib.Path('.')):
+            local_path = self.config.path / bucket / key
+        else:
+            local_path = self.config.path / key
         return self.threads.submit(self.download, bucket, key, local_path)
 
     def set_total(self, total):
