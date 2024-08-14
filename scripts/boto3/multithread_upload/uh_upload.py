@@ -66,19 +66,19 @@ class uploader:
         self.count_buffer = 0
         self.quiet = config.quiet
 
-    def upload(self, path, bucket):
+    def upload(self, bucket, file_path, base_path):
         def cb(count):
             if self.progress is not None:
                 self.progress.update(count)
             else:
                 self.count_buffer += count
-        self.s3.upload_file(path, Bucket=bucket, Key=str(path), Callback=cb, Config=self.transfer_config)
+        self.s3.upload_file(file_path, Bucket=bucket, Key=str(file_path.relative_to(base_path)), Callback=cb, Config=self.transfer_config)
 
     def mk_bucket(self, bucket):
         self.s3.create_bucket(Bucket=bucket)
 
-    def push(self, bucket, path):
-        return self.threads.submit(self.upload, bucket, path)
+    def push(self, bucket, file_path, base_path):
+        return self.threads.submit(self.upload, bucket, file_path, base_path)
 
     def stop(self):
         if self.progress is not None:
@@ -97,31 +97,31 @@ def upload (config):
 
     start = time.monotonic()
 
-    for path in config.path:
+    for base_path in config.path:
 
         if config.bucket is not None:
             bucket = config.bucket
         else:
-            bucket = path.name
+            bucket = base_path.name
 
         if not config.quiet:
-            print(f"\ruploading {path} to bucket {bucket}", end="")
+            print(f"\ruploading {base_path} to bucket {bucket}", end="")
 
         try:
             up.mk_bucket(bucket)
         except:
             pass
 
-        if path.is_file():
-            results += [(path, up.push(path, bucket))]
-            size_total += path.stat().st_size
+        if base_path.is_file():
+            results += [(base_path, up.push(bucket, base_path, pathlib.Path(base_path).parent))]
+            size_total += base_path.stat().st_size
             continue
 
-        for (root, dirs, files) in os.walk(path):
+        for (root, dirs, files) in os.walk(base_path):
             for file in files:
-                filepath = pathlib.Path(root) / file
-                size_total += filepath.stat().st_size
-                results += [(filepath, up.push(filepath, bucket))]
+                file_path = pathlib.Path(root) / file
+                size_total += file_path.stat().st_size
+                results += [(file_path, up.push(bucket, file_path, base_path))]
 
     up.set_total(size_total)
 
