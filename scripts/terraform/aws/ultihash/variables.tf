@@ -24,3 +24,8 @@ variable "monitoring_token" {
   type        = string
   sensitive   = true
 }
+
+variable "helm_chart_installation_timeout" {
+  description = "Time to install the UltiHash helm chart"
+  type = number
+}
