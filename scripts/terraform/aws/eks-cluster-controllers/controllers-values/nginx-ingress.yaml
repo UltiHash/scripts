@@ -1,8 +1,5 @@
 controller:
   kind: DaemonSet
-  nodeSelector:
-    workload-type: entrypoint
-    kubernetes.io/os: linux
   tolerations:
     - key: "purpose"
       operator: "Equal"

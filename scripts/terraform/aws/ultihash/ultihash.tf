@@ -37,6 +37,7 @@ resource "helm_release" "ultihash" {
   name       = "ultihash"
   repository = "oci://registry.ultihash.io/stable"
   chart      = "ultihash-cluster"
+  timeout    = var.helm_chart_installation_timeout
 
   namespace = "default"
 
