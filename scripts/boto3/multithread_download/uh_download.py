@@ -72,6 +72,10 @@ class downloader:
         local_path = self.config.path / bucket / key
         return self.threads.submit(self.download, bucket, key, local_path)
 
+    def stop(self):
+        if self.progress is not None:
+            self.progress.close()
+
     def set_total(self, total):
         self.progress = tqdm.tqdm(unit='B', unit_scale=True, total=total)
         self.progress.update(self.count_buffer)
@@ -102,6 +106,7 @@ def download(config):
     seconds = end - start
     mb = size_total / (1024 * 1024)
 
+    dn.stop()
     print(f"average download speed: {mb/seconds} MB/s")
     return float(mb)/seconds
 
