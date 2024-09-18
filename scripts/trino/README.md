@@ -17,4 +17,4 @@ The file [ultihashs3.properties](./ultihashs3.properties) provides configuration
 
 The file [ultihashs3a.properties](./ultihashs3a.properties) provides configuration for the Hive connector with the S3A driver. Replace `hive.metastore.uri` and `hive.s3.endpoint` with Hive Metastore URL and UltiHash URL correspondingly.
 
-:ledger: It is recommended to use `Delta Lake` or `Iceberg` connector to achive higher berformance.   
+:ledger: It is recommended to use `Delta Lake` or `Iceberg` connector to achive higher performance.   
