@@ -50,12 +50,12 @@ Those names can be changed.
 
 1. Create Kubernetes namespace with the required name
    ```bash
-   $ kubectl create ns <storage>
+   kubectl create ns <storage>
    ```
 2. Provision there the secret named <**registry-credentials**> -  containing the UltiHash registry credentials (see <a href="data_from_uh"> Data Provided By UltiHash section</a>). Replace <**registry_username**> and <**registry_password**> with the received values.
 
    ```bash
-   $ kubectl create secret docker-registry <registry-credentials> -n <storage> --docker-server='registry.ultihash.io' --docker-username='<registry_username>' --docker-password='<registry_password>'
+   kubectl create secret docker-registry <registry-credentials> -n <storage> --docker-server='registry.ultihash.io' --docker-username='<registry_username>' --docker-password='<registry_password>'
    ```
 
 3. Provision a secret  <**ultihash**> with the license key and monitoring token. Replace <**licence_key**> and <**monitoring_token**> with the actual values received from UH.
@@ -66,116 +66,40 @@ Those names can be changed.
 4. Create cluster configuration setup. See below the example of minimal configuration setup: `values.yaml`. Replace the following placeholders with the actual values:
     - <**storage_class**>- storage class name created by the CSI controller.
     - <**domain_name**> - valid domain name for the UltiHash cluster
-    - <**ingress_annotations**> - annotations specific to the Ingress controller running on the Kubernetes cluster. For example, the essential annotations for the Nginx Ingress controller:
-        ```bash
-              kubernetes.io/ingress.class: nginx
-              nginx.ingress.kubernetes.io/proxy-body-size: "0"
-        ```
 Finally, set the number of replicas and storage size for each service to the desired values. 
-:spiral_notepad: The Helm chart supports assigning the following placement constraints: affinity, nodeSelector, tolerations. Feel free to adjust them in the values below.
+:spiral_notepad: The Helm chart supports assigning the following placement constraints: affinity, nodeSelector, tolerations.
 ```yaml
-global:                            
-  imagePullSecrets:                
-    - registry-credentials
-  ultihashSecret:          
-    name: ultihash
-    key: license
-  logLevel: INFO                                 
+global:                           
+  logLevel: INFO                
   telemetryExportInterval: 30000
 
 etcd:
   # ref: https://github.com/bitnami/charts/blob/main/bitnami/etcd/values.yaml
-  replicaCount: 1
-  resources: {}
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
+  replicaCount: <number_of_replicas>
   persistence:
     storageClass: <storage_class>
-    size: <8Gi> 
-
-entrypoint:
-  replicas: 1
-  resources: {}
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-
-  service:
-    type: ClusterIP                   
-
-  ingress:
-    host: <domain_name>             
-    annotations:
-       <ingress_annotations>                      
-
-storage:
-  replicas: 1
-  resources: {}
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  storageClass: <storage_class>             
-  storageSize: <10Gi>             
-
-deduplicator:
-  replicas: 1
-  resources: {}
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  storageClass: <storage_class>
-  storageSize: <10Gi>
 
 database:
   # ref: https://github.com/bitnami/charts/blob/postgresql/15.3.2/bitnami/postgresql/values.yaml
   primary:
-    affinity: {}
-    nodeSelector: {}
-    tolerations: []
-
     persistence:
       storageClass: <storage_class>
-      size: <10Gi>
+      size: <storage_size>
 
-databaseInit:
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
+entrypoint:
+  replicas: <number_of_replicas>
+  ingress:
+    host: <domain_name>  
 
-collector:
-  # ref: https://github.com/open-telemetry/opentelemetry-helm-charts/blob/main/charts/opentelemetry-collector/values.yaml
-  resources: {}
-  affinity: {}
-  nodeSelector: {}
-  tolerations: []
-  extraEnvs:
-  - name: UH_POD_IP
-    valueFrom:
-      fieldRef:
-        fieldPath: status.podIP
-  - name: UH_NODE_IP
-    valueFrom:
-      fieldRef:
-        fieldPath: status.hostIP
-  - name: UH_EXPORTER_TOKEN       
-    valueFrom:
-      secretKeyRef:
-        name: ultihash
-        key: token
-  config:
-    receivers:
-      kubeletstats: null   # Disable collecting metrics from Kubelet
-    service:
-      pipelines:
-        metrics:
-          receivers:
-           - otlp
-           - prometheus
+storage:
+  replicas: <number_of_replicas>
+  storageClass: <storage_class>
+  storageSize: <storage_size>
 
-exporter:
-  # ref: https://github.com/prometheus-community/helm-charts/blob/main/charts/prometheus-node-exporter/values.yaml
-  enabled: true
+deduplicator:
+  replicas: <number_of_replicas>
+  storageClass: <storage_class>
+  storageSize: <storage_size>
 ```
 The Helm values shown above will install the following UltiHash cluster components:
 
@@ -191,19 +115,19 @@ The Helm values shown above will install the following UltiHash cluster componen
 1. Login into the UltiHash registry via Helm (**<registry_username>** to be replaced with the actual user name). Input **<registry_password>** once helm requests it.
 
    ```bash
-   $ helm registry login -u <registry_username> registry.ultihash.io
+   helm registry login -u <registry_username> registry.ultihash.io
    ```
      **(Optionally)** Pull the Helm chart to check out its templates and default values. This helps to gain better understanding regarding the UH cluster internals.
    ```
-   $ helm pull oci://registry.ultihash.io/stable/ultihash-cluster
-   $ tar zxf ultihash-cluster-*
-   $ cd ultihash-cluster
+   helm pull oci://registry.ultihash.io/stable/ultihash-cluster
+   tar zxf ultihash-cluster-*
+   cd ultihash-cluster
    ``` 
 
 2. Install the Helm chart with the customized values. The release and namespace names in the example are set to <**ultihash**> and **<storage>** correspondingly.
 
    ```bash
-   $ helm install ultihash oci://registry.ultihash.io/stable/ultihash-cluster -n storage --values values.yaml --wait
+   helm install ultihash oci://registry.ultihash.io/stable/ultihash-cluster -n storage --values values.yaml --wait --timeout 15m
    ```
 
 Helm will wait until all services of the UltiHash cluster become ready. Once it exits without errors, the UltiHash cluster has been successfully deployed. Use the <**domain_name**> to interact with the UltiHash cluster.
