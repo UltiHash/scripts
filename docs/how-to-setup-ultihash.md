@@ -61,7 +61,7 @@ Those names can be changed.
 3. Provision a secret  <**ultihash**> with the license key and monitoring token. Replace <**licence_key**> and <**monitoring_token**> with the actual values received from UH.
 
    ```bash
-   $ kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<license_key>' --from-literal=token='<monitoring_token>'
+   kubectl create secret generic <ultihash> -n <storage> --from-literal=license='<license_key>' --from-literal=token='<monitoring_token>'
    ```
 4. Create cluster configuration setup. See below the example of minimal configuration setup: `values.yaml`. Replace the following placeholders with the actual values:
     - <**storage_class**>- storage class name created by the CSI controller.

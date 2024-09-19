@@ -5,13 +5,13 @@ This document provides information regarding the integration between UltiHash an
 ## Airflow Configuration
 
 1. Make sure Apache Airflow has the following Python packages installed:
-```
+```bash
 pip3 install 'apache-airflow[amazon]'
 pip3 install apache-airflow-providers-amazon
 ```
 
-2. Create a connection object pointing to the UltiHash cluster. The example below shows how to provision a connection named `ultihash` by using Airflow CLI. Replace <endpoint-url> with the HTTP URL of the provisioned UltiHash cluster.
-```
+2. Create a connection object pointing to the UltiHash cluster. The example below provisions a connection named `ultihash` by using Airflow CLI. Replace `<endpoint-url>` with the HTTP URL of the provisioned UltiHash cluster.
+```bash
 airflow connections add 'ultihash' --conn-json '{  
         "conn_type": "aws",
         "login": "ACCESS_KEY_ID",
@@ -31,8 +31,8 @@ airflow connections add 'ultihash' --conn-json '{
 # Successfully added `conn_id`=ultihash : aws://ACCESS_KEY_ID:******@:    
 ```
 
-3. Use the connection ID in Airflow's S3 Operators and Hooks to perform operations against the UltiHash cluster. The DAG shown below leverages the connection `ultihash` created in the previous step to provision S3 bucket on UltiHash. 
-```
+3. Use the connection ID in Airflow's S3 Operators and Hooks to perform operations against the UltiHash cluster. The DAG shown below leverages the connection `ultihash` created in the previous step to provision an S3 bucket on UltiHash. 
+```python
 from airflow.models.dag import DAG
 from airflow.operators.python import PythonOperator
 from airflow.providers.amazon.aws.operators.s3 import S3CreateBucketOperator, S3DeleteBucketOperator

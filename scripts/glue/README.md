@@ -34,8 +34,8 @@ job = Job(glueContext)
 job.init(args['JOB_NAME'], args)
 ``` 
 In case the UltiHash cluster URL is http-based, need to add the following line into the configuration:
-```
+```python
 sc._jsc.hadoopConfiguration().set("fs.s3a.connection.ssl.enabled", "false")
 ```
 
-The full example of the PySpark integration could be found [here](./integration.py)
+The full example of the AWS Glue integration could be found [here](./integration.py)
