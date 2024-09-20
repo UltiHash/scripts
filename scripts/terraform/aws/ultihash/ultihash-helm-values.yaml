@@ -8,6 +8,16 @@ global:
   logLevel: INFO
   telemetryExportInterval: 30000
 
+recovery:
+  nodeSelector:
+    workload-type: directory
+    purpose: ultihash-testing
+  tolerations:
+    - key: "purpose"
+      operator: "Equal"
+      value: "ultihash-testing"
+      effect: "NoSchedule"
+
 etcd:
   replicaCount: 1
   nodeSelector:
