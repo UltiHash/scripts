@@ -4,9 +4,6 @@ import boto3
 import botocore
 import json
 
-AWS_KEY_ID="key-id"
-AWS_KEY_SECRET="secret"
-
 def parse_args():
     parser = argparse.ArgumentParser(
         prog='UH Stats',
@@ -25,10 +22,9 @@ def get_effective_size(config):
             'mode': 'standard'
         })
 
-    s3 = boto3.client('s3', endpoint_url=config.url, config=s3_cnf,
-            aws_access_key_id=AWS_KEY_ID, aws_secret_access_key=AWS_KEY_SECRET)
+    s3 = boto3.client('s3', endpoint_url=config.url, config=s3_cnf)
     response = s3.get_object(Bucket="ultihash", Key="v1/metrics/cluster")
-    body = response['Body']#.read()
+    body = response['Body']
     jbody = json.load(body)
     effective_size = jbody['effective_data_size']
     print(f"Ultihash effective size is {effective_size} MB")
