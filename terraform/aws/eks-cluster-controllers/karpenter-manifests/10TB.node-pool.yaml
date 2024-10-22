@@ -1,0 +1,34 @@
+apiVersion: karpenter.sh/v1beta1
+kind: NodePool
+metadata:
+  name: ultihash-node
+spec:
+  disruption:
+    consolidateAfter: 1m
+    consolidationPolicy: WhenEmpty
+  template:
+    metadata:
+      labels:
+        purpose: 10TB
+    spec:
+      nodeClassRef:
+        apiVersion: karpenter.k8s.aws/v1beta1
+        kind: EC2NodeClass
+        name: ultihash-testing
+      requirements:
+      - key: karpenter.sh/capacity-type
+        operator: In
+        values:
+        - on-demand
+      - key: kubernetes.io/arch
+        operator: In
+        values:
+        - arm64
+      - key: node.kubernetes.io/instance-type
+        operator: In
+        values:
+        - r8g.4xlarge
+      taints:
+      - effect: NoSchedule
+        key: purpose
+        value: ultihash-testing

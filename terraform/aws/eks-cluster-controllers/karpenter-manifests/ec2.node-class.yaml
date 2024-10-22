@@ -3,7 +3,7 @@ kind: EC2NodeClass
 metadata:
   name: ultihash-testing
 spec:
-  amiFamily: Ubuntu
+  amiFamily: Bottlerocket
   role: ${node_registration_role}
   subnetSelectorTerms:
     - tags:
@@ -16,10 +16,3 @@ spec:
     purpose: ultihash-testing
   detailedMonitoring: false
   associatePublicIPAddress: false
-  userData: |
-    #!/bin/bash
-    # Enable all tracing capabilities
-    echo 0 > /proc/sys/kernel/yama/ptrace_scope
-    # Mount the instance store
-    sudo mkfs.ext4 /dev/nvme1n1
-    sudo mount -t ext4 /dev/nvme1n1 /opt

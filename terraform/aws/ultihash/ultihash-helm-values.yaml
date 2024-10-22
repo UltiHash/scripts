@@ -10,8 +10,7 @@ global:
 
 recovery:
   nodeSelector:
-    workload-type: directory
-    purpose: ultihash-testing
+    purpose: 10TB
   tolerations:
     - key: "purpose"
       operator: "Equal"
@@ -21,42 +20,25 @@ recovery:
 etcd:
   replicaCount: 1
   nodeSelector:
-    workload-type: directory
-    purpose: ultihash-testing
+    purpose: 10TB
   tolerations:
     - key: "purpose"
       operator: "Equal"
       value: "ultihash-testing"
       effect: "NoSchedule"
   persistence:
-    size: 100Gi
-    storageClass: local-path   # REQUIRED TO CHANGE: Replace with 'ebs-csi-gp3' to create persistent volume
+    size: 8Gi
+    storageClass: ebs-csi-gp3-normal
 
 entrypoint:
   replicas: 1
   nodeSelector:
-    workload-type: entrypoint
-    purpose: ultihash-testing
+    purpose: 10TB
   tolerations:
     - key: "purpose"
       operator: "Equal"
       value: "ultihash-testing"
       effect: "NoSchedule"
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-          - key: role
-            operator: In
-            values:
-            - entrypoint
-        topologyKey: kubernetes.io/hostname
-  extraEnv:
-    - name: UH_DB_DIRECTORY_CONNECTIONS
-      value: "5"
-    - name: UH_DB_MULTIPART_CONNECTIONS
-      value: "5"
 
   ingress:
     host: 
@@ -65,22 +47,11 @@ entrypoint:
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
 
 storage:
-  replicas: 2
-  storageClass: local-path    # REQUIRED TO CHANGE: Use 'gp3-high-performance' to create persistent volume       
-  storageSize: 5Ti
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-          - key: role
-            operator: In
-            values:
-            - storage
-        topologyKey: kubernetes.io/hostname                  
+  replicas: 1
+  storageClass: ebs-csi-gp3-optimized 
+  storageSize: 10Ti            
   nodeSelector:
-    workload-type: storage
-    purpose: ultihash-testing
+    purpose: 10TB
   tolerations:
     - key: "purpose"
       operator: "Equal"
@@ -88,22 +59,11 @@ storage:
       effect: "NoSchedule"
 
 deduplicator:
-  replicas: 2
-  storageClass: local-path   # REQUIRED TO CHANGE: Replace with 'gp3-high-performance' to create persistent volume
+  replicas: 1
+  storageClass: ebs-csi-gp3-normal
   storageSize: 300Gi
-  affinity:
-    podAntiAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-      - labelSelector:
-          matchExpressions:
-          - key: role
-            operator: In
-            values:
-            - deduplicator
-        topologyKey: kubernetes.io/hostname
   nodeSelector:
-    workload-type: storage
-    purpose: ultihash-testing
+    purpose: 10TB
   tolerations:
     - key: "purpose"
       operator: "Equal"
@@ -113,8 +73,7 @@ deduplicator:
 database:
   primary:
     nodeSelector:
-      workload-type: directory
-      purpose: ultihash-testing
+      purpose: 10TB
     tolerations:
     - key: "purpose"
       operator: "Equal"
@@ -122,13 +81,12 @@ database:
       effect: "NoSchedule"
 
     persistence:
-      storageClass: local-path    # REQUIRED TO CHANGE: Replace with 'gp3-high-performance' to create persistent volume 
+      storageClass: ebs-csi-gp3-normal 
       size: 300Gi
 
 databaseInit:
   nodeSelector:
-    workload-type: directory
-    purpose: ultihash-testing
+    purpose: 10TB
   tolerations:
     - key: "purpose"
       operator: "Equal"
@@ -137,7 +95,7 @@ databaseInit:
 
 collector:
   nodeSelector:
-    purpose: ultihash-testing
+    purpose: 10TB
   tolerations:
     - key: "purpose"
       operator: "Equal"

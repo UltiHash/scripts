@@ -7,16 +7,6 @@ locals {
   }
 }
 
-resource "helm_release" "local-path-provisioner" {
-  name       = "local-path-provisioner"
-  repository = "https://charts.containeroo.ch"
-  chart      = "local-path-provisioner"
-  version    = "0.0.26"
-
-  namespace        = "local-path-provisioner"
-  create_namespace = true
-}
-
 module "ebs-csi-driver" {
   source  = "lablabs/eks-ebs-csi-driver/aws"
   version = "0.1.0"
@@ -31,8 +21,8 @@ module "ebs-csi-driver" {
   namespace = "kube-system"
 
   storage_classes = [
-    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "ebs-csi-gp3", "parameters" : { "type" : "gp3" }, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" },
-    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "gp3-high-performance", "parameters" : { "type" : "gp3", "iops" : "16000", throughput : "1000" }, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" }
+    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "ebs-csi-gp3-normal", "parameters" : { "type" : "gp3"}, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" },
+    { "allowVolumeExpansion" : true, "annotations" : { "storageclass.kubernetes.io/is-default-class" : "false" }, "name" : "ebs-csi-gp3-optimized", "parameters" : { "type" : "gp3", "iops" : "16000", throughput : "1000" }, "reclaimPolicy" : "Delete", "volumeBindingMode" : "WaitForFirstConsumer" }
   ]
 }
 
@@ -109,7 +99,7 @@ resource "helm_release" "karpenter" {
 }
 
 data "template_file" "karpenter_ec2_node_class" {
-  template = file("./karpenter-manifests/ec2-nvme.node-class.yaml")
+  template = file("./karpenter-manifests/ec2.node-class.yaml")
   vars = {
     node_registration_role = module.karpenter.node_iam_role_name
   }
