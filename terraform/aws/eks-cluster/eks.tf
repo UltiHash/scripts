@@ -41,10 +41,10 @@ module "eks" {
   # Setup the essential cluster controllers
   cluster_addons = {
     vpc-cni = {
-      addon_version = "v1.16.2-eksbuild.1"
+      addon_version = "v1.18.1-eksbuild.3"
     }
     kube-proxy = {
-      addon_version = "v1.28.4-eksbuild.4"
+      addon_version = "v1.30.0-eksbuild.3"
     }
     coredns = {
       addon_version = "v1.10.1-eksbuild.7"
