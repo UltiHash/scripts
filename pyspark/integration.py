@@ -16,7 +16,7 @@ dataset_file_name = argv[3] # For example, "sample_data.csv"
 spark = SparkSession.builder.appName("UH Integration Test").getOrCreate()
 sc = spark.sparkContext
 
-# AWS access and secret keys could be any, since authentication is not yet supported by UltiHash
+# Set the AWS access and secret keys to the corresponding UltiHash cluster credentials
 sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", "mocked")
 sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", "mocked")
 # The S3 endpoint is a URL pointing to the deployed UltiHash cluster
