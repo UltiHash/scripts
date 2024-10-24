@@ -14,11 +14,11 @@ from awsglue.job import Job
 args = getResolvedOptions(sys.argv, ['JOB_NAME'])
 
 # Define the UltiHash endpoint URL 
-s3_endpoint = "https://ultihash.cluster.io"
+s3_endpoint = "https://ultihash.cluster.io" # Replace with the URL of our UltiHash cluster
 
 sc = SparkContext()
-sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", "mocked")
-sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", "mocked")
+sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", "mocked") # Replace with the corresponding UltiHash credentials
+sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", "mocked") # Replace with the corresponding UltiHash credentials
 sc._jsc.hadoopConfiguration().set("fs.s3a.endpoint", s3_endpoint)
 sc._jsc.hadoopConfiguration().set("fs.s3a.connection.ssl.enabled", "false")
 sc._jsc.hadoopConfiguration().set("fs.s3a.path.style.access", "true")

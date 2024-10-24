@@ -10,7 +10,7 @@ pip3 install 'apache-airflow[amazon]'
 pip3 install apache-airflow-providers-amazon
 ```
 
-2. Create a connection object pointing to the UltiHash cluster. The example below provisions a connection named `ultihash` by using Airflow CLI. Replace `<endpoint-url>` with the HTTP URL of the provisioned UltiHash cluster.
+2. Create a connection object pointing to the UltiHash cluster. The example below provisions a connection named `ultihash` by using Airflow CLI. Replace `<endpoint-url>` with the HTTP URL of the provisioned UltiHash cluster. Instead of `ACCESS_KEY_ID` and `AWS_SECRET_KEY` use the corresponding UltiHash cluster credentials (see [User and policy Management](https://docs.ultihash.io/2.-administration/8.-user-and-policy-management)).
 ```bash
 airflow connections add 'ultihash' --conn-json '{  
         "conn_type": "aws",

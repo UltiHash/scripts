@@ -13,8 +13,8 @@ spark = SparkSession.builder.appName("AppName").getOrCreate()
 sc = spark.sparkContext
 
 # AWS access and secret keys could be any, since authentication is not yet supported by UltiHash
-sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", "mocked")
-sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", "mocked")
+sc._jsc.hadoopConfiguration().set("fs.s3a.access.key", "mocked")  # Replace with the corresponding UltiHash credentials
+sc._jsc.hadoopConfiguration().set("fs.s3a.secret.key", "mocked")  # Replace with the corresponding UltiHash credentials
 # The S3 endpoint is a URL pointing to the deployed UltiHash cluster
 # It has to contain the scheme (http or https) and the domain name of the cluster endpoint
 sc._jsc.hadoopConfiguration().set("fs.s3a.endpoint", "https://ultihash.cluster.io")
