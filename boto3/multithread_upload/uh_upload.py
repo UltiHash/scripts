@@ -40,10 +40,17 @@ def parse_args():
         action='store', default=8*1024*1024, type=int)
     parser.add_argument('-q', '--quiet', help='do not show progress bar',
         action='store_true', dest='quiet')
-    parser.add_argument('--generate', help='generate and upload random data of the specified size in TiB',
+    parser.add_argument('--generate', help='generate and upload random data of the specified size in GiB',
                         action='store', dest='generate', type=int)
 
-    return parser.parse_args()
+    args, unknown = parser.parse_known_args()
+
+    if args.generate:
+        args.path = []
+    elif not args.path:
+        parser.error("The path argument is required unless --generate is specified.")
+
+    return args
 
 class RandomDataStream(io.BytesIO):
     def __init__(self, size):
