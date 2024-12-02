@@ -28,6 +28,8 @@ def parse_args():
         action='store', default=60, type=int)
     parser.add_argument('--max-attempts', help='maximum number of download attempts',
         action='store', default=3, type=int)
+    parser.add_argument('--no-store', help='do not store downloaded data to file system, only used for benchmarking',
+                        action='store_false', dest='store')
 
     return parser.parse_args()
 
@@ -55,12 +57,15 @@ class downloader:
             else:
                 self.count_buffer += count
 
-        local_path.parent.mkdir(parents=True, exist_ok=True)
+
         response = self.s3.get_object(Bucket=bucket, Key=key)
-        with open(local_path, "wb+") as f:
-            body = response["Body"].read()
-            cb(len(body))
-            f.write(body)
+        body = response["Body"].read()
+        cb(len(body))
+
+        if self.config.store:
+            local_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(local_path, "wb+") as f:
+                f.write(body)
 
     def list_objects(self, bucket):
         paginator = self.s3.get_paginator('list_objects_v2')
@@ -77,7 +82,7 @@ class downloader:
             self.progress.close()
 
     def set_total(self, total):
-        self.progress = tqdm.tqdm(unit='B', unit_scale=True, total=total)
+        self.progress = tqdm.tqdm(unit="iB", unit_scale=True, unit_divisor=1024, total=total)
         self.progress.update(self.count_buffer)
         self.count_buffer = 0
 
