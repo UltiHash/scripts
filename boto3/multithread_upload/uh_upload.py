@@ -72,7 +72,6 @@ class RandomDataStream(io.BytesIO):
             size = self.remaining
         self.remaining -= size
         return bytearray(os.urandom(size))
-        #return random.randbytes(size)
 
     def seekable(self):
         return False
