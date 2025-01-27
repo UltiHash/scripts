@@ -8,10 +8,11 @@ import botocore
 import os
 import pathlib
 import sys
-import time
 import tqdm
 import io
-import random
+import time
+import numpy as np
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -63,15 +64,8 @@ class RandomDataStream(io.BytesIO):
         if size < 0 or size > self.remaining:
             size = self.remaining
         self.remaining -= size
-        return random.randbytes(size)
 
-    def read(self, size=-1):
-        if self.remaining <= 0:
-            return b''  # EOF
-        if size < 0 or size > self.remaining:
-            size = self.remaining
-        self.remaining -= size
-        return bytearray(os.urandom(size))
+        return np.random.bytes(size)
 
     def seekable(self):
         return False
