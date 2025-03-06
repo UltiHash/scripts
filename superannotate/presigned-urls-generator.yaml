@@ -1,0 +1,137 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: url-generator-config
+  namespace: <ultihash-cluster-namespace>          # REQUIRED: replace with the namespace where the UltiHash cluster is deployed to
+data:
+  app.py: |
+    from flask import Flask, request, jsonify
+    import boto3
+    import botocore
+    import logging
+    import re
+    import os
+
+    app = Flask(__name__)
+
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger("flask-app")
+
+    ULTIHASH_S3_ENDPOINT = os.getenv("ULTIHASH_S3_ENDPOINT")
+    INTEGRATION_TOKEN = os.getenv("INTEGRATION_TOKEN")
+
+    s3_client = boto3.client("s3", endpoint_url=ULTIHASH_S3_ENDPOINT)
+
+    @app.after_request
+    def log_response(response):
+        logger.debug("Response Headers: %s", dict(response.headers))
+        logger.debug("Response Body: %s", response.get_data(as_text=True))
+        return response
+
+    @app.route("/integrate", methods=["POST"])
+    def process_request():
+        token = request.headers.get("token")
+        body = request.get_json()
+
+        logger.debug("Request Headers: %s", dict(request.headers))
+        logger.debug("Request Body: %s", body)
+
+        if token != INTEGRATION_TOKEN:
+            return jsonify({"error": "Authentication failed"}), 401
+
+        if "paths" in body:
+            urls = []
+            for s3_object in body["paths"]:
+                bucket, key = re.match(r"s3://([^/]+)/(.+)", s3_object).groups()
+                url = s3_client.generate_presigned_url(ClientMethod="get_object", Params={"Bucket": bucket, "Key": key})
+                urls.append(url)
+
+            response = {"urls": urls}
+        else:
+            response = {}
+
+        return jsonify(response), 200
+
+    if __name__ == "__main__":
+        app.run(debug=True, host="0.0.0.0", port=5000)
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: url-generator
+  namespace: <ultihash-cluster-namespace>   # REQUIRED: replace with the namespace where the UltiHash cluster is deployed to
+spec:
+  replicas: 1         # Adjust the number of replicas for the URLs Generator if needed
+  selector:
+    matchLabels:
+      app: url-generator
+  template:
+    metadata:
+      labels:
+        app: url-generator
+    spec:
+      containers:
+      - name: url-generator
+        image: python:3.10-slim
+        ports:
+        - containerPort: 5000
+        env:
+          - name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                name: "ultihash-super-user-credentials"
+                key: access-key-id
+          - name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                name: "ultihash-super-user-credentials"
+                key: secret-key
+          - name: ULTIHASH_S3_ENDPOINT
+            value: "<ultihash-endpoint-url>"     # REQUIRED: replace with the HTTPS endpoint of your UltiHash cluster, e.g. https://cluster.ultihash.example
+          - name: INTEGRATION_TOKEN
+            value: "<custom-integration-secret>"  # REQUIRED: replace with the secret value of your custom integration e.g. oAKg5YlvxSqiNF3ni2MUq4uJmnvexRcx67utGa62Gf7zymxYx9Ua2d5q1ZNh6p67
+        volumeMounts:
+          - name: app-script
+            mountPath: /app
+        command: ["/bin/sh", "-c"]
+        args:
+          - pip install flask boto3 &&
+            python /app/app.py
+      volumes:
+        - name: app-script
+          configMap:
+            name: url-generator-config
+--- 
+apiVersion: v1
+kind: Service
+metadata:
+  name: url-generator
+  namespace: <ultihash-cluster-namespace>      # REQUIRED: replace with the namespace where the UltiHash cluster is deployed to
+spec:
+  selector:
+    app: url-generator
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 5000
+  type: ClusterIP
+--- 
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: url-generator
+  namespace: <ultihash-cluster-namespace>   # REQUIRED: replace with the namespace where the UltiHash cluster is deployed to
+  annotations:
+    kubernetes.io/ingress.class: nginx      # Adjust annotations for your Ingress controller if needed
+spec:
+  rules:
+  - host: <urls-generator-domain-name>      # REQUIRED: replace with the public domain name of the pre-signed URLs generator, e.g. generator.ultihash.example
+    http:
+      paths:
+      - backend:
+          service:
+            name: url-generator
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
