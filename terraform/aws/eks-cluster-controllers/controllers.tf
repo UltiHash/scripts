@@ -87,7 +87,7 @@ resource "helm_release" "karpenter" {
   namespace  = local.karpenter_namespace
   repository = "oci://public.ecr.aws/karpenter"
   chart      = "karpenter"
-  version    = "0.35.1"
+  version    = "1.2.0"
 
   values = [
     data.template_file.karpenter.rendered
