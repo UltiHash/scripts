@@ -10,7 +10,7 @@ vpc_private_subnets = ["10.0.16.0/20", "10.0.32.0/20"]   # IPv4 ranges allocated
 # EKS cluster configuration
 
 cluster_name    = "ultihash-test" # Human readable name for the EKS cluster
-cluster_version = "1.30"          # Kubernetes engine version for the EKS cluster
+cluster_version = "1.32"          # Kubernetes engine version for the EKS cluster
 
 cluster_admins = [
   "arn:aws:iam::account_id:user/test-user" # REQUIRED TO CHANGE: List of IAM roles or IAM users to grant admin access to the EKS cluster
