@@ -47,16 +47,19 @@ entrypoint:
       nginx.ingress.kubernetes.io/proxy-body-size: "0"
 
 storage:
-  replicas: 1
-  storageClass: ebs-csi-gp3-optimized 
-  storageSize: 10Ti            
-  nodeSelector:
-    purpose: 10TB
-  tolerations:
-    - key: "purpose"
-      operator: "Equal"
-      value: "ultihash-testing"
-      effect: "NoSchedule"
+  groups:
+    - id: 0
+      type: ROUND_ROBIN
+      storages: 1
+      storageClass: ebs-csi-gp3-optimized 
+      size: 10Ti            
+      nodeSelector:
+        purpose: 10TB
+      tolerations:
+        - key: "purpose"
+          operator: "Equal"
+          value: "ultihash-testing"
+          effect: "NoSchedule"
 
 deduplicator:
   replicas: 1
