@@ -43,6 +43,9 @@ def parse_args():
     parser.add_argument('--generate', help='generate and upload random data of the specified size in GiB',
                         action='store', dest='generate', type=int)
 
+    parser.add_argument('-e', '--check-etag', help='check ETag after upload (single part only)',
+        action='store_true', dest='check_etag')
+
     args, unknown = parser.parse_known_args()
 
     if args.generate:
@@ -110,7 +113,9 @@ class uploader:
                 self.progress.update(count)
             else:
                 self.count_buffer += count
-        self.s3.upload_file(file_path, Bucket=bucket, Key=str(file_path.relative_to(base_path)), Callback=cb, Config=self.transfer_config)
+        key = str(file_path.relative_to(base_path))
+        self.s3.upload_file(file_path, Bucket=bucket, Key=key, Callback=cb, Config=self.transfer_config)
+        return key
 
     def upload_random(self, bucket, key, size):
         def cb(count):
@@ -186,7 +191,8 @@ def upload (config):
                 pass
 
             if base_path.is_file():
-                results += [(base_path, up.push(bucket, base_path, pathlib.Path(base_path).parent))]
+                key = up.upload(bucket, base_path, pathlib.Path(base_path).parent)
+                results += [(base_path, None, bucket, key)]
                 size_total += base_path.stat().st_size
                 continue
 
@@ -194,15 +200,23 @@ def upload (config):
                 for file in files:
                     file_path = pathlib.Path(root) / file
                     size_total += file_path.stat().st_size
-                    results += [(file_path, up.push(bucket, file_path, base_path))]
+                    key = up.upload(bucket, file_path, base_path)
+                    results += [(file_path, None, bucket, key)]
 
     up.set_total(size_total)
 
+    import hashlib
+    def calc_md5(path):
+        h = hashlib.md5()
+        with open(path, 'rb') as f:
+            for chunk in iter(lambda: f.read(8192), b''):
+                h.update(chunk)
+        return h.hexdigest()
+
+    # Wait for all uploads to finish
     for job in results:
-        try:
-            job[1].result()
-        except Exception as e:
-            print(f"Error uploading {job[0]}: {str(e)}", file=sys.stderr)
+        file_path, _, bucket, key = job
+        pass  # uploads already done synchronously
 
     end = time.monotonic()
     seconds = end - start
@@ -211,6 +225,30 @@ def upload (config):
     up.stop()
     print(f"average upload speed: {mb/seconds} MB/s")
 
+    # ETag check after timing
+    etag_fail = False
+    for job in results:
+        file_path, _, bucket, key = job
+        try:
+            if config.check_etag and pathlib.Path(file_path).is_file():
+                resp = up.s3.head_object(Bucket=bucket, Key=key)
+                etag = resp['ETag'].strip('"')
+                md5 = calc_md5(file_path)
+                if '-' in etag:
+                    print(f"[ETag] {file_path}: multipart upload detected, cannot compare MD5.")
+                elif etag == md5:
+                    print(f"[ETag] {file_path}: OK (etag matches local MD5)")
+                else:
+                    print(f"\033[31m[ETag] {file_path}: FAIL (etag {etag} != local MD5 {md5})\033[0m")
+                    etag_fail = True
+            else:
+                pass
+        except Exception as e:
+            print(f"Error uploading {file_path}: {str(e)}", file=sys.stderr)
+            etag_fail = True
+
+    if config.check_etag and etag_fail:
+        sys.exit(1)
     return float(mb)/seconds
 
 if __name__ == "__main__":
