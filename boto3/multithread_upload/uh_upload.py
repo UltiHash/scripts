@@ -191,17 +191,19 @@ def upload (config):
                 pass
 
             if base_path.is_file():
-                key = up.upload(bucket, base_path, pathlib.Path(base_path).parent)
-                results += [(base_path, None, bucket, key)]
-                size_total += base_path.stat().st_size
-                continue
+                  key = str(base_path.relative_to(pathlib.Path(base_path).parent))
+                  future = up.push(bucket, base_path, pathlib.Path(base_path).parent)
+                  results += [(base_path, future, bucket, key)]
+                  size_total += base_path.stat().st_size
+                  continue
 
             for (root, dirs, files) in os.walk(base_path):
-                for file in files:
-                    file_path = pathlib.Path(root) / file
-                    size_total += file_path.stat().st_size
-                    key = up.upload(bucket, file_path, base_path)
-                    results += [(file_path, None, bucket, key)]
+                  for file in files:
+                      file_path = pathlib.Path(root) / file
+                      key = str(file_path.relative_to(base_path))
+                      future = up.push(bucket, file_path, base_path)
+                      results += [(file_path, future, bucket, key)]
+                      size_total += file_path.stat().st_size
 
     up.set_total(size_total)
 
@@ -215,8 +217,12 @@ def upload (config):
 
     # Wait for all uploads to finish
     for job in results:
-        file_path, _, bucket, key = job
-        pass  # uploads already done synchronously
+          # Wait for each upload to finish
+          file_path, future, bucket, key = job
+          try:
+              future.result()
+          except Exception as e:
+              print(f"Error uploading {file_path}: {str(e)}", file=sys.stderr)
 
     end = time.monotonic()
     seconds = end - start

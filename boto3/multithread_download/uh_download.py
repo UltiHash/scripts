@@ -59,13 +59,22 @@ class downloader:
 
 
         response = self.s3.get_object(Bucket=bucket, Key=key)
-        body = response["Body"].read()
-        cb(len(body))
-
+        stream = response["Body"]
         if self.config.store:
             local_path.parent.mkdir(parents=True, exist_ok=True)
             with open(local_path, "wb+") as f:
-                f.write(body)
+                while True:
+                    chunk = stream.read(1048576)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+                    cb(len(chunk))
+        else:
+            while True:
+                chunk = stream.read(1048576)
+                if not chunk:
+                    break
+                cb(len(chunk))
 
     def list_objects(self, bucket):
         paginator = self.s3.get_paginator('list_objects_v2')
