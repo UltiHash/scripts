@@ -26,8 +26,9 @@ resource "kubernetes_secret" "opaque" {
   }
 
   data = {
-    license = var.ultihash_license
-    token   = var.monitoring_token
+    customer_id  = var.customer_id
+    access_token = var.access_token
+    token        = var.monitoring_token
   }
 
   type = "Opaque"

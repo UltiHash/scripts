@@ -13,8 +13,14 @@ variable "registry_password" {
   sensitive = true
 }
 
-variable "ultihash_license" {
-  description = "License to run UltiHash cluster"
+variable "customer_id" {
+  description = "Customer ID to run UltiHash cluster"
+  type        = string
+  sensitive   = true
+}
+
+variable "access_token" {
+  description = "Access token to run UltiHash cluster"
   type        = string
   sensitive   = true
 }
