@@ -8,6 +8,9 @@ import pathlib
 import sys
 import time
 import tqdm
+import os
+
+import shutil
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -30,6 +33,9 @@ def parse_args():
         action='store', default=3, type=int)
     parser.add_argument('--no-store', help='do not store downloaded data to file system, only used for benchmarking',
                         action='store_false', dest='store')
+
+    parser.add_argument('--delete-path', help='recursively delete target path before download',
+                        action='store_true', dest='delete_path')
 
     return parser.parse_args()
 
@@ -126,4 +132,12 @@ def download(config):
 
 if __name__ == "__main__":
     config = parse_args()
+
+    def delete_path(config):
+        if config.path.exists():
+            shutil.rmtree(config.path)
+            os.sync()
+
+    if config.delete_path:
+        delete_path(config)
     download(config)
